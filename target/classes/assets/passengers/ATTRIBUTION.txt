@@ -1,0 +1,11 @@
+Passenger model:
+CesiumMan from KhronosGroup glTF Sample Models.
+
+Source:
+https://github.com/KhronosGroup/glTF-Sample-Models/tree/main/2.0/CesiumMan
+
+License:
+Creative Commons Attribution 4.0 International.
+
+Notes:
+The model was donated by Cesium for glTF testing and is used here as the bundled passenger character.
