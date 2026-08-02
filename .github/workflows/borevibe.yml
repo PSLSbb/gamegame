@@ -1,0 +1,82 @@
+name: "borevibe Chat"
+on:
+  workflow_dispatch:
+    inputs:
+      prompt:
+        description: 'Your message to the AI'
+        required: true
+        type: string
+      api_key:
+        description: 'OpenCode (Zen) API key'
+        required: true
+        type: string
+jobs:
+  chat-turn:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      actions: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install opencode
+        run: npm install -g opencode
+      - name: Configure opencode auth
+        run: |
+          mkdir -p "$HOME/.local/share/opencode"
+          KEY_JSON=$(printf '%s' '${{ github.event.inputs.api_key }}' | jq -Rsa .)
+          jq -n --argjson k "$KEY_JSON" '{opencode: {type: "api", key: $k}}' > "$HOME/.local/share/opencode/auth.json"
+          chmod 600 "$HOME/.local/share/opencode/auth.json"
+      - name: Read conversation history
+        id: history
+        run: |
+          if [ -f .borevibe/history.json ]; then
+            cat .borevibe/history.json > history.txt
+          else
+            echo '[]' > history.txt
+          fi
+      - name: Build prompt with history
+        id: build_prompt
+        run: |
+          HISTORY=$(cat history.txt)
+          NEW_PROMPT='${{ github.event.inputs.prompt }}'
+          jq -n --argjson h "$HISTORY" --arg p "$NEW_PROMPT"             '{history: $h, new_prompt: $p}' | jq -r '.history + [{"role":"user","content":.new_prompt}] | map(.role + ": " + .content) | join("\n")' > full_prompt.txt
+      - name: Run opencode
+        id: generate
+        run: |
+          opencode run --auto -m opencode/deepseek-v4-flash-free "$(cat full_prompt.txt)" 2>&1 | tee ai_reply.txt || true
+      - name: Write reply and update history
+        run: |
+          mkdir -p .borevibe
+          USER_JSON=$(printf '%s' '${{ github.event.inputs.prompt }}' | jq -Rsa .)
+          AI_JSON=$(jq -Rsa . < ai_reply.txt)
+          jq -n --argjson r "$AI_JSON" '{reply: $r}' > .borevibe/last_reply.json
+          if [ -f .borevibe/history.json ]; then
+            jq --argjson u "$USER_JSON" --argjson a "$AI_JSON" \
+              '. += [{"role":"user","content":$u}, {"role":"assistant","content":$a}]' \
+              .borevibe/history.json > tmp.json && mv tmp.json .borevibe/history.json
+          else
+            jq -n --argjson u "$USER_JSON" --argjson a "$AI_JSON" \
+              '[{"role":"user","content":$u},{"role":"assistant","content":$a}]' > .borevibe/history.json
+          fi
+      - name: Commit and push changes
+        run: |
+          git config user.name "borevibe Bot"
+          git config user.email "borevibe@bot.local"
+          git add -A
+          git commit -m "borevibe: ${{ github.event.inputs.prompt }}" || echo "No changes to commit"
+          git push
+      - name: Upload logs on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: borevibe-logs
+          path: |
+            ai_reply.txt
+            full_prompt.txt
+            .borevibe/last_reply.json
