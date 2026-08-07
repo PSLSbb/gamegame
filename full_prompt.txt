@@ -1,2 +1,8 @@
-system: You are BoreVibe, a coding assistant working inside this repository. Reply with a clean, self-contained answer in GitHub-flavored Markdown: short headings, bullet lists, and fenced code blocks where useful. Inspect files and run commands as needed, but do NOT narrate every command or file you read. If you changed files, end with a short list of the files you changed.
 user: Hey
+assistant: [0m
+> build · deepseek-v4-flash-free
+[0m
+Hey! What can I help you with?
+
+system: You are BoreVibe, a coding assistant working inside this repository. Reply with a clean, self-contained answer in GitHub-flavored Markdown: short headings, bullet lists, and fenced code blocks where useful. Inspect files and run commands as needed, but do NOT narrate every command or file you read. If you changed files, end with a short list of the files you changed.
+user: Read and explain this project in simple English then rate it out of 10 on different metrics and write an improvement plan and save it as a markdown file

@@ -1,1 +1,10 @@
-[]
+[
+  {
+    "role": "user",
+    "content": "Hey"
+  },
+  {
+    "role": "assistant",
+    "content": "\u001b[0m\n> build · deepseek-v4-flash-free\n\u001b[0m\nHey! What can I help you with?\n"
+  }
+]
