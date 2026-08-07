@@ -25,7 +25,19 @@ jobs:
         with:
           node-version: '20'
       - name: Install opencode
-        run: npm install -g opencode
+        run: |
+          set +e
+          npm install -g opencode-ai 2>&1 | tail -20
+          if [ $PIPESTATUS -ne 0 ] || ! command -v opencode >/dev/null 2>&1; then
+            echo "npm install failed, trying official installer..."
+            curl -fsSL https://opencode.ai/install | bash 2>&1 | tail -20
+          fi
+          if command -v opencode >/dev/null 2>&1; then
+            echo "opencode installed: $(opencode --version 2>&1 | head -1)"
+          else
+            echo "WARNING: opencode binary not available"
+          fi
+          exit 0
       - name: Configure opencode auth
         run: |
           mkdir -p "$HOME/.local/share/opencode"
@@ -45,32 +57,55 @@ jobs:
         run: |
           HISTORY=$(cat history.txt)
           NEW_PROMPT='${{ github.event.inputs.prompt }}'
-          jq -n --argjson h "$HISTORY" --arg p "$NEW_PROMPT"             '{history: $h, new_prompt: $p}' | jq -r '.history + [{"role":"user","content":.new_prompt}] | map(.role + ": " + .content) | join("\n")' > full_prompt.txt
+          SYSTEM_PROMPT='You are BoreVibe, a coding assistant working inside this repository. Reply with a clean, self-contained answer in GitHub-flavored Markdown: short headings, bullet lists, and fenced code blocks where useful. Inspect files and run commands as needed, but do NOT narrate every command or file you read. If you changed files, end with a short list of the files you changed.'
+          jq -n --argjson h "$HISTORY" --arg p "$NEW_PROMPT" --arg s "$SYSTEM_PROMPT"             '{history: $h, new_prompt: $p, system: $s}' | jq -r '.history + [{"role":"system","content":.system},{"role":"user","content":.new_prompt}] | map(.role + ": " + .content) | join("\n")' > full_prompt.txt || printf '%s\n' '${{ github.event.inputs.prompt }}' > full_prompt.txt
       - name: Run opencode
         id: generate
+        shell: bash
         run: |
+          set +eo pipefail
           opencode run --auto -m opencode/deepseek-v4-flash-free "$(cat full_prompt.txt)" 2>&1 | tee ai_reply.txt || true
+          if [ ! -s ai_reply.txt ]; then
+            printf '%s\n' "The agent returned no reply. The run itself completed  check the workflow log in GitHub Actions for details." > ai_reply.txt
+          fi
       - name: Write reply and update history
         run: |
           mkdir -p .borevibe
           USER_JSON=$(printf '%s' '${{ github.event.inputs.prompt }}' | jq -Rsa .)
-          AI_JSON=$(jq -Rsa . < ai_reply.txt)
+          if [ -s ai_reply.txt ]; then
+            AI_JSON=$(jq -Rsa . < ai_reply.txt) || AI_JSON='"malformed reply"'
+          else
+            AI_JSON='"The agent returned no reply."'
+          fi
           jq -n --argjson r "$AI_JSON" '{reply: $r}' > .borevibe/last_reply.json
           if [ -f .borevibe/history.json ]; then
             jq --argjson u "$USER_JSON" --argjson a "$AI_JSON" \
               '. += [{"role":"user","content":$u}, {"role":"assistant","content":$a}]' \
-              .borevibe/history.json > tmp.json && mv tmp.json .borevibe/history.json
+              .borevibe/history.json > tmp.json && mv tmp.json .borevibe/history.json || true
           else
             jq -n --argjson u "$USER_JSON" --argjson a "$AI_JSON" \
-              '[{"role":"user","content":$u},{"role":"assistant","content":$a}]' > .borevibe/history.json
+              '[{"role":"user","content":$u},{"role":"assistant","content":$a}]' > .borevibe/history.json || true
           fi
       - name: Commit and push changes
+        env:
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
         run: |
           git config user.name "borevibe Bot"
           git config user.email "borevibe@bot.local"
+          if ! git symbolic-ref -q HEAD >/dev/null 2>&1; then
+            git checkout -B "${DEFAULT_BRANCH}" 2>/dev/null || git switch -c "${DEFAULT_BRANCH}" 2>/dev/null || git checkout --detach
+          fi
           git add -A
-          git commit -m "borevibe: ${{ github.event.inputs.prompt }}" || echo "No changes to commit"
-          git push
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+            exit 0
+          fi
+          git commit -m "borevibe: ${{ github.event.inputs.prompt }}"
+          if ! git symbolic-ref -q HEAD >/dev/null 2>&1; then
+            echo "::error::Unable to attach to a branch for push"
+            exit 1
+          fi
+          git push 2>&1 || { echo "::error::Git push failed"; exit 1; }
       - name: Upload logs on failure
         if: failure()
         uses: actions/upload-artifact@v4
