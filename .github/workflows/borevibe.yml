@@ -66,7 +66,7 @@ jobs:
           set +eo pipefail
           opencode run --auto -m opencode/deepseek-v4-flash-free "$(cat full_prompt.txt)" 2>&1 | tee ai_reply.txt || true
           if [ ! -s ai_reply.txt ]; then
-            printf '%s\n' "The agent returned no reply. The run itself completed  check the workflow log in GitHub Actions for details." > ai_reply.txt
+            printf '%s\n' "The agent returned no reply. The run itself completed — check the workflow log in GitHub Actions for details." > ai_reply.txt
           fi
       - name: Write reply and update history
         run: |
