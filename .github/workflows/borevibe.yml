@@ -57,14 +57,29 @@ jobs:
         run: |
           HISTORY=$(cat history.txt)
           NEW_PROMPT='${{ github.event.inputs.prompt }}'
-          SYSTEM_PROMPT='You are BoreVibe, a coding assistant working inside this repository. Reply with a clean, self-contained answer in GitHub-flavored Markdown: short headings, bullet lists, and fenced code blocks where useful. Inspect files and run commands as needed, but do NOT narrate every command or file you read. If you changed files, end with a short list of the files you changed.'
+          SYSTEM_PROMPT='You are BoreVibe, a coding assistant working inside this repository. Reply with ONLY a clean, self-contained final answer in GitHub-flavored Markdown: short headings, bullet lists, and fenced code blocks where useful. Inspect files and run commands only when needed, but never include your file reads, shell commands, directory listings, or tool narration in the answer. If you changed files, end with a short list of the files you changed.'
           jq -n --argjson h "$HISTORY" --arg p "$NEW_PROMPT" --arg s "$SYSTEM_PROMPT"             '{history: $h, new_prompt: $p, system: $s}' | jq -r '.history + [{"role":"system","content":.system},{"role":"user","content":.new_prompt}] | map(.role + ": " + .content) | join("\n")' > full_prompt.txt || printf '%s\n' '${{ github.event.inputs.prompt }}' > full_prompt.txt
       - name: Run opencode
         id: generate
         shell: bash
         run: |
           set +eo pipefail
-          opencode run --auto -m opencode/deepseek-v4-flash-free "$(cat full_prompt.txt)" 2>&1 | tee ai_reply.txt || true
+          opencode run --auto --format default -m opencode/deepseek-v4-flash-free "$(cat full_prompt.txt)" > ai_reply_raw.txt 2> opencode_stderr.log || true
+          node -e '
+            const fs = require("fs");
+            const raw = fs.existsSync("ai_reply_raw.txt") ? fs.readFileSync("ai_reply_raw.txt", "utf8") : "";
+            let lines = raw.split("\n");
+            while (lines.length && /^s*> /.test(lines[0])) lines.shift();
+            while (lines.length && lines[0].trim() === "") lines.shift();
+            const out = [];
+            let blanks = 0;
+            for (let i = 0; i < lines.length; i++) {
+              if (lines[i].trim() === "") { blanks++; if (blanks > 1) continue; } else blanks = 0;
+              out.push(lines[i]);
+            }
+            fs.writeFileSync("ai_reply.txt", out.join("\n").trim() + "\n");
+          '
+          rm -rf "ai_reply_raw.txt"
           if [ ! -s ai_reply.txt ]; then
             printf '%s\n' "The agent returned no reply. The run itself completed — check the workflow log in GitHub Actions for details." > ai_reply.txt
           fi
@@ -114,4 +129,5 @@ jobs:
           path: |
             ai_reply.txt
             full_prompt.txt
+            opencode_stderr.log
             .borevibe/last_reply.json
