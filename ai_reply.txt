@@ -1,35 +1,59 @@
-# Project Architecture
+No database exists in this codebase, so I'll map the game's actual runtime design onto a relational
+## Rating
 
-A **Java/LWJGL** 3D driving game using a hand-rolled OpenGL engine. No game engine — everything from window creation to shaders is written from scratch.
+**Overall: 6.0/10** — a solid, well-documented teaching/arcade demo.
 
-## Layered structure
+| Category | Score | Notes |
+|---|---|---|
+| Documentation | 9.0 | Excellent README + OOP guide |
+| Robustness | 7.5 | Fallbacks for models/fonts, dt-capping, crash cooldown |
+| Code quality / OOP | 7.0 | Clean layering, `GameObject`→`Entity`, Passenger state machine; but `Main` is a god class |
+| Gameplay | 6.0 | Fun arcade loop; no difficulty curve |
+| Performance | 6.0 | Road-height spatial grid; no culling |
+| Maintainability | 5.5 | Zero tests, `Main` does everything, duplicate score aliases |
+| Visuals | 5.5 | Custom renderer; one light, no shadows |
+| Build/portability | 3.5 | Java 26 + `natives-linux` hard-coded |
+| Testing / CI | 1.5 | No test suite |
 
+## Complexity
+
+- **5,627 LOC / 28 Java files**, ~519 decision points (`if/for/while/switch/case`).
+- `Main.java`: **1,770 LOC (31% of codebase), 235 decision points** — god-class, high coupling.
+- High: `CityMap` (418 LOC, route tracing), `ModelLoader` (376), `Renderer` (414), `CollisionSystem` (24 decision points, triangle-level).
+- Structural complexity: moderate — packages layer cleanly (engine ← scene ← gameplay ← ui), but everything funnels through `Main`.
+- No database exists (scores are `scoreboard.txt` CSV, top-5).
+
+## MariaDB Diagram
+
+Created `MARIA_DESIGN_DIAGRAM.md` with a mermaid ER diagram + full DDL mapping the design (there was no existing DB). Key entities: `player`, `high_score`, `game_session`, `city`, `city_mesh`, `road_sample`, `route` + `route_waypoint`, `traffic_car`, `passenger`, `delivery`.
+
+```mermaid
+erDiagram
+    CITY ||--o{ CITY_MESH : contains
+    CITY ||--o{ ROAD_SAMPLE : has
+    CITY ||--o{ ROUTE : has
+    ROUTE ||--|{ ROUTE_WAYPOINT : composed_of
+    ROUTE ||--o{ TRAFFIC_CAR : follows
+    CITY ||--o{ PASSENGER : contains
+    PLAYER ||--o{ HIGH_SCORE : records
+    PLAYER ||--o{ GAME_SESSION : plays
+    CITY ||--o{ GAME_SESSION : runs_on
+    GAME_SESSION ||--o{ DELIVERY : includes
+    PASSENGER ||--o{ DELIVERY : fulfilled_by
+
+    PLAYER { INT id PK, VARCHAR(32) name, DATETIME created_at }
+    HIGH_SCORE { INT id PK, INT player_id FK, INT score, FLOAT time_elapsed, DATETIME achieved_at }
+    GAME_SESSION { INT id PK, INT player_id FK, INT city_id FK, ENUM screen, INT score, TINYINT lives, FLOAT time_limit, DATETIME started_at }
+    CITY { INT id PK, VARCHAR(128) name, VARCHAR(255) model_path, FLOAT min_x, FLOAT max_x, FLOAT min_z, FLOAT max_z, FLOAT scale }
+    CITY_MESH { INT id PK, INT city_id FK, VARCHAR(96) mesh_name, ENUM category, BOOLEAN solid, BOOLEAN visible, INT vertex_count, INT index_count }
+    ROAD_SAMPLE { INT id PK, INT city_id FK, FLOAT x, FLOAT z }
+    ROUTE { INT id PK, INT city_id FK, VARCHAR(64) name, INT seed_sample }
+    ROUTE_WAYPOINT { INT id PK, INT route_id FK, SMALLINT seq, FLOAT x, FLOAT z }
+    TRAFFIC_CAR { INT id PK, INT city_id FK, INT route_id FK, FLOAT speed, BOOLEAN ambient, BOOLEAN collidable }
+    PASSENGER { INT id PK, INT city_id FK, VARCHAR(32) name, VARCHAR(64) destination, FLOAT pickup_x, FLOAT pickup_z, FLOAT dropoff_x, FLOAT dropoff_z, ENUM state }
+    DELIVERY { INT id PK, INT game_session_id FK, INT passenger_id FK, DATETIME pickup_at, DATETIME dropoff_at, INT points }
 ```
-game/
-├── core      → Game, objects, interfaces (GameObject, Updatable, Renderable)
-├── engine    → Low-level rendering (Window, Renderer, Camera, Mesh, Texture,
-│               ShaderProgram, Font, Transform)
-├── scene     → Entity, ModelLoader (.glb / glTF parsing)
-├── gameplay  → GameState, PlayerController, CityMap, TrafficCar, Passenger,
-│               CollisionSystem, HUD, MiniMap
-├── scoring   → ScoreboardManager, ScoreEntry (+ duplicates in gameplay/)
-└── ui        → Menu
-```
 
-## Key responsibilities
+Design choices: world coords stored as `x/z` only (game simulates in the XZ plane); `CITY_MESH.solid/visible` replaces the fragile mesh-name string heuristics (`street`, `building`, `collision`); `DELIVERY` makes the 100-pt rule queryable; `HIGH_SCORE` replaces `scoreboard.txt`.
 
-- **Startup** — `Main.java` (1,770 lines) bootstraps: loads models + shaders, builds the city, spawns traffic/passengers, and owns the render/update game loop.
-- **Render loop** — `Renderer` (414 lines) does all OpenGL draws each frame: batch render, HUD via `Font`, minimap viewport, etc.
-- **Entity model** — `Entity`/`GameObject` wrap position, rotation, scale + mesh, with a callable `render()`/`update()` per frame.
-- **Gameplay systems** — `GameState` holds lives/score/timer; `CollisionSystem` does AABB-vs-AABB checks; `CityMap` builds roads + spawns `TrafficCar`s and `Passenger`s along routes.
-- **Cross-resource output** — internal JPG sprite atlas for glyphs; `ModelLoader` falls back to box geometry when a `.glb` fails.
-
-## Design emphasis
-
-- Small interfaces (`Updatable`, `Renderable`) define the object contract.
-- Assets are drawn from classpath (`src/main/resources`).
-- Largely loop-driven: one `update()`/`; every frame, one draw pass.
-
-> ⚠️ Biggest architectural smell: **`MiniMap` is fully coded but never rendered** — dead code the README claims exists — and `Main.java` mixes asset loading, gameplay orchestration, and rendering into one class.
-
-Want me to write out the full class-by-class breakdown or produce a Mermaid diagram?
+Files changed: `MARIA_DESIGN_DIAGRAM.md`

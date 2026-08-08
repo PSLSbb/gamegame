@@ -1,3 +1,208 @@
 [0m
 > build · deepseek-v4-flash-free
 [0m
+[0m$ [0mls -la
+total 77980
+drwxr-xr-x 10 runner runner     4096 Aug  8 00:22 .
+drwxr-xr-x  3 runner runner     4096 Aug  8 00:22 ..
+drwxr-xr-x  2 runner runner     4096 Aug  8 00:22 .borevibe
+drwxr-xr-x  7 runner runner     4096 Aug  8 00:22 .git
+drwxr-xr-x  3 runner runner     4096 Aug  8 00:22 .github
+-rw-r--r--  1 runner runner      176 Aug  8 00:22 .gitignore
+-rw-r--r--  1 runner runner 34055376 Aug  8 00:22 1982_toyota_hiace_combi.glb
+-rw-r--r--  1 runner runner     3320 Aug  8 00:22 OOP_REFACTOR_GUIDE.md
+-rw-r--r--  1 runner runner     9449 Aug  8 00:22 PROJECT_REVIEW.md
+-rw-r--r--  1 runner runner    20127 Aug  8 00:22 README.md
+-rw-r--r--  1 runner runner     2048 Aug  8 00:22 ai_reply.txt
+-rw-r--r--  1 runner runner        0 Aug  8 00:22 ai_reply_raw.txt
+drwxr-xr-x  3 runner runner     4096 Aug  8 00:22 assets
+-rw-r--r--  1 runner runner 22739084 Aug  8 00:22 bmw_m4_competition_m_package.glb
+-rw-r--r--  1 runner runner 22917411 Aug  8 00:22 burnin-rubber-crash-n-burn-city.zip
+-rw-r--r--  1 runner runner     2285 Aug  8 00:22 dependency-reduced-pom.xml
+-rw-r--r--  1 runner runner      769 Aug  8 00:22 full_prompt.txt
+-rw-r--r--  1 runner runner    14773 Aug  8 00:22 history.txt
+-rw-r--r--  1 runner runner      173 Aug  8 00:22 opencode.json
+-rw-r--r--  1 runner runner       44 Aug  8 00:23 opencode_stderr.log
+-rw-r--r--  1 runner runner     5355 Aug  8 00:22 pom.xml
+-rw-r--r--  1 runner runner       21 Aug  8 00:22 scoreboard.txt
+drwxr-xr-x  2 runner runner     4096 Aug  8 00:22 source
+drwxr-xr-x  3 runner runner     4096 Aug  8 00:22 src
+drwxr-xr-x  5 runner runner     4096 Aug  8 00:22 target
+drwxr-xr-x  2 runner runner     4096 Aug  8 00:22 textures
+[0m
+[0m$ [0mgit log --oneline -15
+058a641 Ignore borevibe scratch files
+91ba2f5 Add borevibe workflow
+cc808f7 borevibe: Explain the architecture of the project
+a88c8a3 Add borevibe workflow
+83dea4b borevibe: Read and explain this project in simple English then rate it out of 10 on different metrics and write an improvement plan and save it as a markdown file
+f367898 borevibe: Hey
+c772cde Add borevibe workflow
+5c12d46 Add borevibe workflow
+f1e74c6 Seed borevibe history
+7458faa Add borevibe workflow
+d813496 Add opencode config
+3cf2ad1 Add borevibe workflow
+e81522d Fresh start upload
+[0m
+[0m$ [0mfind src -type f | head -100
+src/main/resources/shaders/menu_vertex.glsl
+src/main/resources/shaders/fragment.glsl
+src/main/resources/shaders/vertex.glsl
+src/main/resources/shaders/menu_fragment.glsl
+src/main/resources/assets/passengers/ATTRIBUTION.txt
+src/main/resources/assets/passengers/passenger.glb
+src/main/java/game/Main.java
+src/main/java/game/scoring/ScoreboardManager.java
+src/main/java/game/scoring/ScoreEntry.java
+src/main/java/game/scoring/Scoreboard.java
+src/main/java/game/ui/Menu.java
+src/main/java/game/scene/Entity.java
+src/main/java/game/scene/ModelLoader.java
+src/main/java/game/gameplay/GameState.java
+src/main/java/game/gameplay/ScoreboardManager.java
+src/main/java/game/gameplay/CollisionSystem.java
+src/main/java/game/gameplay/CityMap.java
+src/main/java/game/gameplay/ScoreEntry.java
+src/main/java/game/gameplay/HUD.java
+src/main/java/game/gameplay/PlayerController.java
+src/main/java/game/gameplay/TrafficCar.java
+src/main/java/game/gameplay/MiniMap.java
+src/main/java/game/gameplay/Passenger.java
+src/main/java/game/core/GameObject.java
+src/main/java/game/core/Updatable.java
+src/main/java/game/core/Renderable.java
+src/main/java/game/engine/ShaderProgram.java
+src/main/java/game/engine/Renderer.java
+src/main/java/game/engine/Window.java
+src/main/java/game/engine/Texture.java
+src/main/java/game/engine/Transform.java
+src/main/java/game/engine/Camera.java
+src/main/java/game/engine/Mesh.java
+src/main/java/game/engine/Font.java
+[0m
+[0m$ [0mfind source -type f | head -50
+source/burnin_rubber_crash_n_burn_city.glb
+[0m
+[0m→ [0mRead README.md
+[0m→ [0mRead src/main/java/game/Main.java
+[0m✗ [0mRead project_review.md failed
+[91m[1mError: [0mFile not found: /home/runner/work/gamegame/gamegame/project_review.md
+
+Did you mean one of these?
+/home/runner/work/gamegame/gamegame/PROJECT_REVIEW.md
+[0m→ [0mRead OOP_REFACTOR_GUIDE.md
+[0m→ [0mRead PROJECT_REVIEW.md
+[0m→ [0mRead src/main/java/game/scoring/Scoreboard.java
+[0m→ [0mRead src/main/java/game/scoring/ScoreEntry.java
+[0m→ [0mRead src/main/java/game/scoring/ScoreboardManager.java
+[0m→ [0mRead src/main/java/game/gameplay/GameState.java
+[0m→ [0mRead src/main/java/game/gameplay/Passenger.java
+[0m→ [0mRead src/main/java/game/gameplay/CityMap.java
+[0m→ [0mRead src/main/java/game/Main.java[90m [offset=1360][0m
+[0m
+[0m$ [0mwc -l src/main/java/game/*.java src/main/java/game/*/*.java 2>/dev/null | sort -n
+12 src/main/java/game/core/Updatable.java
+    13 src/main/java/game/gameplay/ScoreEntry.java
+    17 src/main/java/game/core/Renderable.java
+    19 src/main/java/game/gameplay/ScoreboardManager.java
+    19 src/main/java/game/scoring/Scoreboard.java
+    32 src/main/java/game/engine/Transform.java
+    37 src/main/java/game/scoring/ScoreEntry.java
+    47 src/main/java/game/gameplay/HUD.java
+    54 src/main/java/game/engine/Camera.java
+    85 src/main/java/game/core/GameObject.java
+    85 src/main/java/game/engine/ShaderProgram.java
+   100 src/main/java/game/gameplay/GameState.java
+   101 src/main/java/game/engine/Texture.java
+   102 src/main/java/game/engine/Window.java
+   121 src/main/java/game/gameplay/PlayerController.java
+   130 src/main/java/game/scoring/ScoreboardManager.java
+   131 src/main/java/game/scene/Entity.java
+   182 src/main/java/game/gameplay/TrafficCar.java
+   192 src/main/java/game/gameplay/MiniMap.java
+   197 src/main/java/game/gameplay/CollisionSystem.java
+   202 src/main/java/game/ui/Menu.java
+   214 src/main/java/game/engine/Mesh.java
+   226 src/main/java/game/engine/Font.java
+   331 src/main/java/game/gameplay/Passenger.java
+   376 src/main/java/game/scene/ModelLoader.java
+   414 src/main/java/game/engine/Renderer.java
+   418 src/main/java/game/gameplay/CityMap.java
+  1770 src/main/java/game/Main.java
+  5627 total
+[0m
+[0m→ [0mRead src/main/java/game/gameplay/ScoreEntry.java
+[0m→ [0mRead src/main/java/game/gameplay/ScoreboardManager.java
+[0m→ [0mRead src/main/java/game/core/GameObject.java
+[0m→ [0mRead src/main/java/game/gameplay/PlayerController.java
+[0m✱ [0mGrep "(mysql|maria|jdbc|database|SELECT|INSERT INTO)"[90m 0 matches[0m
+[0m→ [0mRead src/main/java/game/scene/Entity.java
+[0m→ [0mRead src/main/java/game/gameplay/TrafficCar.java
+[0m
+[0m$ [0mrg -c "\b(if|for|while|switch|case)\b" src/main/java --glob '*.java' 2>/dev/null | sort -t: -k2 -rn | head -20; echo "---totals---"; rg "\b(if|for|while|switch|case)\b" src/main/java --glob '*.java' | wc -l
+---totals---
+0
+/bin/bash: line 1: rg: command not found
+[0m
+[0m$ [0mecho "public methods per class:"; for f in $(find src/main/java -name '*.java'); do c=$(rg -c "public |protected " "$f" 2>/dev/null); echo "$c $f"; done | sort -rn | head -25
+public methods per class:
+ src/main/java/game/ui/Menu.java
+ src/main/java/game/scoring/ScoreboardManager.java
+ src/main/java/game/scoring/Scoreboard.java
+ src/main/java/game/scoring/ScoreEntry.java
+ src/main/java/game/scene/ModelLoader.java
+ src/main/java/game/scene/Entity.java
+ src/main/java/game/gameplay/TrafficCar.java
+ src/main/java/game/gameplay/ScoreboardManager.java
+ src/main/java/game/gameplay/ScoreEntry.java
+ src/main/java/game/gameplay/PlayerController.java
+ src/main/java/game/gameplay/Passenger.java
+ src/main/java/game/gameplay/MiniMap.java
+ src/main/java/game/gameplay/HUD.java
+ src/main/java/game/gameplay/GameState.java
+ src/main/java/game/gameplay/CollisionSystem.java
+ src/main/java/game/gameplay/CityMap.java
+ src/main/java/game/engine/Window.java
+ src/main/java/game/engine/Transform.java
+ src/main/java/game/engine/Texture.java
+ src/main/java/game/engine/ShaderProgram.java
+ src/main/java/game/engine/Renderer.java
+ src/main/java/game/engine/Mesh.java
+ src/main/java/game/engine/Font.java
+ src/main/java/game/engine/Camera.java
+ src/main/java/game/core/Updatable.java
+[0m
+[0m$ [0mgrep -rcE '\b(if|for|while|switch|case)\b' src/main/java --include='*.java' | sort -t: -k2 -rn | head -12; echo '--- total decision points ---'; grep -rE '\b(if|for|while|switch|case)\b' src/main/java --include='*.java' | wc -l
+src/main/java/game/Main.java:235
+src/main/java/game/gameplay/CityMap.java:43
+src/main/java/game/scene/ModelLoader.java:39
+src/main/java/game/engine/Renderer.java:34
+src/main/java/game/gameplay/Passenger.java:26
+src/main/java/game/gameplay/CollisionSystem.java:24
+src/main/java/game/gameplay/MiniMap.java:18
+src/main/java/game/gameplay/TrafficCar.java:15
+src/main/java/game/engine/Font.java:14
+src/main/java/game/gameplay/PlayerController.java:13
+src/main/java/game/engine/Mesh.java:12
+src/main/java/game/ui/Menu.java:11
+--- total decision points ---
+519
+[0m
+[0m$ [0mgrep -rE 'public |protected ' src/main/java --include='*.java' | grep -cE 'public \w+\(|protected \w+\('; echo '--- methods per file ---'; for f in $(find src/main/java -name '*.java'); do c=$(grep -cE '(public|protected) [^()]*\(' "$f"); echo "$c $f"; done | sort -rn | head -10
+35
+--- methods per file ---
+29 src/main/java/game/gameplay/Passenger.java
+25 src/main/java/game/gameplay/GameState.java
+23 src/main/java/game/scene/Entity.java
+22 src/main/java/game/engine/Mesh.java
+14 src/main/java/game/gameplay/TrafficCar.java
+14 src/main/java/game/core/GameObject.java
+13 src/main/java/game/engine/Window.java
+12 src/main/java/game/engine/Renderer.java
+11 src/main/java/game/engine/ShaderProgram.java
+10 src/main/java/game/gameplay/CityMap.java
+[0m
+[0m← [0mWrite MARIA_DESIGN_DIAGRAM.md
+Wrote file successfully.
+[0m
