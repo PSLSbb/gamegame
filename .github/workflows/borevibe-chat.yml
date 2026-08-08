@@ -54,12 +54,25 @@ jobs:
           API_KEY=$(printf '%s' "$API_KEY_B64" | base64 -d)
           jq -n --arg k "$API_KEY" '{opencode: {type: "api", key: $k}}' > "$HOME/.local/share/opencode/auth.json"
           chmod 600 "$HOME/.local/share/opencode/auth.json"
+      - name: Isolate on PR branch
+        env:
+          RUN_ID: ${{ github.run_id }}
+          REPO: ${{ github.repository }}
+        run: |
+          git config user.name "borevibe Bot"
+          git config user.email "borevibe@bot.local"
+          BRANCH="borevibe/process/${RUN_ID}"
+          git checkout -b "$BRANCH" 2>&1
+          git config --local --unset-all "http.https://github.com/.extraheader" 2>/dev/null || true
+          git config --local --unset-all credential.helper 2>/dev/null || true
+          git remote set-url origin "https://github.com/${REPO}.git" 2>&1
+          echo "isolated on $BRANCH (push credentials removed)"
       - name: Build prompt with history
         id: build_prompt
         env:
           PROMPT_B64: ${{ github.event.inputs.prompt }}
           HISTORY_B64: ${{ github.event.inputs.history }}
-          SYSTEM_PROMPT: 'You are BoreVibe, a coding assistant for this GitHub repository. You have read-write access and may create, edit, or delete files to fulfill the user request. Prefer small, focused changes. Reply with ONLY a clean, self-contained answer in GitHub-flavored Markdown: short headings, bullet lists, and fenced code blocks where useful. Never include file reads, shell commands, directory listings, or tool narration in your answer. If you changed files, end with a short list of files you changed.'
+          SYSTEM_PROMPT: 'You are BoreVibe, a coding assistant for this GitHub repository. Your job is to ACTUALLY make the requested change by editing, creating, or deleting real files with your tools. You MUST call your file tools — do not just describe what you would do. Work is tracked on a review branch; never run git commands yourself (no add, commit, push, checkout, branch). After editing, reply with ONLY a clean, self-contained answer in GitHub-flavored Markdown: short headings, bullet lists, and fenced code blocks where useful. Never include file reads, shell commands, directory listings, or tool narration in your answer. If you changed files, end with a short list of files you changed.'
         run: |
           PROMPT=$(printf '%s' "$PROMPT_B64" | base64 -d)
           HISTORY=$(printf '%s' "$HISTORY_B64" | base64 -d 2>/dev/null || echo '[]')
@@ -92,6 +105,23 @@ jobs:
           if [ ! -s ai_reply.txt ]; then
             printf '%s\n' "The agent returned no reply." > ai_reply.txt
           fi
+      - name: Verify real changes
+        run: |
+          CHANGED=$(git status --porcelain | wc -l)
+          echo "changed_files=$CHANGED"
+          node -e '
+            const fs = require("fs");
+            const execSync = require("child_process").execSync;
+            let note;
+            try {
+              const files = execSync("git status --porcelain", { encoding: "utf8" })
+                .split("\n").filter(Boolean).map((l) => l.slice(3).trim()).filter(Boolean).slice(0, 20);
+              note = files.length ? "Changed files: " + files.join(", ") : "No file changes were found on the review branch.";
+            } catch {
+              note = "Could not read the working tree.";
+            }
+            fs.appendFileSync("ai_reply.txt", "\n\n> " + note + "\n");
+          '
       - name: Upload reply artifact
         uses: actions/upload-artifact@v4
         with:
@@ -101,25 +131,27 @@ jobs:
       - name: Open PR with changes
         env:
           RUN_ID: ${{ github.run_id }}
+          REPO: ${{ github.repository }}
           DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
           PROMPT_B64: ${{ github.event.inputs.prompt }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          set +e
+          BRANCH="borevibe/process/${RUN_ID}"
           git config user.name "borevibe Bot"
           git config user.email "borevibe@bot.local"
-          BRANCH="borevibe/process/${RUN_ID}"
-          git checkout -B "$BRANCH" 2>/dev/null || git switch -c "$BRANCH"
-          git add -A
-          if git diff --cached --quiet; then
-            echo "No changes to commit — nothing to review"
+          if git diff --quiet && git diff --cached --quiet; then
+            echo "No changes produced on the branch — nothing to review"
             exit 0
           fi
-          git -c user.name="borevibe Bot" -c user.email="borevibe@bot.local" commit -m "borevibe: process ${RUN_ID}" --allow-empty-message 2>&1 | tail -3
-          git push -u origin "$BRANCH" 2>&1 | tail -3
+          git add -A
+          git commit -m "borevibe: process ${RUN_ID}" --allow-empty-message 2>&1 | tail -2
+          git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/${REPO}.git"
+          git push -u origin "HEAD:refs/heads/${BRANCH}" 2>&1 | tail -3
           BODY_FILE=opencode_prompt.txt
           PROMPT_PLAIN=$(printf '%s' "$PROMPT_B64" | base64 -d 2>/dev/null)
           printf '%s\n' "$PROMPT_PLAIN" > "$BODY_FILE"
-          gh pr create --base "${DEFAULT_BRANCH}" --head "$BRANCH" --title "borevibe: process ${RUN_ID}" --body-file "$BODY_FILE" 2>&1 | tail -3 || echo "(PR may already exist)"
+          gh pr create --base "${DEFAULT_BRANCH}" --head "$BRANCH" --title "borevibe: process ${RUN_ID}" --body-file "$BODY_FILE" 2>&1 | tail -5
       - name: Upload logs on failure
         if: failure()
         uses: actions/upload-artifact@v4
