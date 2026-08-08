@@ -1,0 +1,8 @@
+# borevibe — scratch and conversation files (never commit these)
+.borevibe/
+ai_reply.txt
+ai_reply_raw.txt
+full_prompt.txt
+history.txt
+opencode_prompt.txt
+opencode_stderr.log
