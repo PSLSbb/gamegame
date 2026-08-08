@@ -1,5 +1,18 @@
 # City Racer
 
+[![Java](https://img.shields.io/badge/Java-26-orange?logo=openjdk&logoColor=white)](https://openjdk.org/projects/jdk/)
+[![LWJGL](https://img.shields.io/badge/LWJGL-3.3.6-blueviolet?logo=maven)](https://www.lwjgl.org/)
+[![OpenGL](https://img.shields.io/badge/OpenGL-3.3%20Core-5586A4?logo=opengl&logoColor=white)](https://www.opengl.org/)
+[![JOML](https://img.shields.io/badge/JOML-1.10-3766ab?logo=maven)](https://github.com/JOML-CI/JOML)
+[![GLFW](https://img.shields.io/badge/GLFW-3.3-8C1D40)]()
+[![Build](https://img.shields.io/badge/build-Maven-2C2255?logo=apachemaven&logoColor=white)](https://maven.apache.org/)
+[![Platform](https://img.shields.io/badge/platform-Linux-3A9E2C?logo=linux)]()
+
+[![GitHub repo size](https://img.shields.io/github/repo-size/PSLSbb/gamegame?logo=github)](https://github.com/PSLSbb/gamegame)
+[![Last commit](https://img.shields.io/github/last-commit/PSLSbb/gamegame?logo=github)](https://github.com/PSLSbb/gamegame)
+[![Top language](https://img.shields.io/github/languages/top/PSLSbb/gamegame?logo=java&logoColor=white)](https://github.com/PSLSbb/gamegame/search?l=Java)
+[![Open issues](https://img.shields.io/github/issues/PSLSbb/gamegame?logo=github)](https://github.com/PSLSbb/gamegame/issues)
+
 City Racer is a Java/LWJGL passenger-delivery driving game. The player drives a van through a loaded 3D city map, picks up passengers at green markers, drops them off at yellow markers, avoids traffic cars, and tries to score as many deliveries as possible before time or lives run out.
 
 The project is intentionally compact: it has a small custom rendering/gameplay stack, GLB model loading through Assimp, arcade-style vehicle movement, generated traffic routes, passenger objectives, a HUD, and a minimap.
@@ -7,12 +20,17 @@ The project is intentionally compact: it has a small custom rendering/gameplay s
 ## Contents
 
 - [Features](#features)
+- [Badges](#badges)
 - [Requirements](#requirements)
 - [Project Structure](#project-structure)
+- [Architecture Overview](#architecture-overview)
+- [Runtime Flow](#runtime-flow)
+- [Game State Machine](#game-state-machine)
+- [Passenger State Machine](#passenger-state-machine)
+- [Bundled Assets](#bundled-assets)
 - [Quick Start](#quick-start)
 - [How to Play](#how-to-play)
 - [Build and Run Commands](#build-and-run-commands)
-- [Architecture Overview](#architecture-overview)
 - [Core Systems](#core-systems)
 - [Asset and Model Pipeline](#asset-and-model-pipeline)
 - [Rendering and Shaders](#rendering-and-shaders)
@@ -20,11 +38,13 @@ The project is intentionally compact: it has a small custom rendering/gameplay s
 - [Adding or Changing Content](#adding-or-changing-content)
 - [Troubleshooting](#troubleshooting)
 - [Development Notes](#development-notes)
+- [Suggested Next Improvements](#suggested-next-improvements)
+- [Related Documents](#related-documents)
 
 ## Features
 
 - 3D city driving using LWJGL 3, GLFW, OpenGL 3.3, JOML, STB, and Assimp.
-- GLB model loading for both the city map and player vehicle.
+- GLB model loading for the city map, player vehicle, traffic vehicles, and passengers.
 - Passenger pickup and drop-off gameplay.
 - Five-minute game timer.
 - Three-life collision system.
@@ -32,14 +52,27 @@ The project is intentionally compact: it has a small custom rendering/gameplay s
 - Third-person chase camera.
 - HUD with score, timer, speed, lives, delivery count, and passenger hints.
 - Minimap with road samples, traffic routes, player direction, passengers, traffic, and spawn location.
-- Menu, instructions screen, and game-over screen.
-- Fallback city/car generation if model loading fails.
+- Menu, instructions screen, scoreboard, and game-over screen.
+- Fallback city/car generation if a model fails to load.
+
+## Badges
+
+| Badge | Meaning |
+| --- | --- |
+| `Java 26` | Compiler target (`maven.compiler.source/target` in `pom.xml`) |
+| `LWJGL 3.3.6` | LWJGL version pinned in `pom.xml` |
+| `OpenGL 3.3 Core` | GLFW/OpenGL context requested by the engine |
+| `JOML 1.10.x` | JOML math library dependency |
+| `Assimp` | Model import via LWJGL-Assimp |
+| `Maven` | Build tool |
+| `Linux` | Current LWJGL natives classifier |
+| `repo size`, `last commit`, `top language`, `open issues` | Live GitHub stats |
 
 ## Requirements
 
 The Maven project is configured for:
 
-- JDK 26 or newer, based on `maven.compiler.source` and `maven.compiler.target` in `pom.xml`.
+- JDK 21 or newer, based on `maven.compiler.source` and `maven.compiler.target` in `pom.xml`.
 - Maven 3.8+.
 - Linux native LWJGL libraries, because `pom.xml` sets:
 
@@ -50,18 +83,30 @@ The Maven project is configured for:
 - A graphics environment that supports OpenGL 3.3 Core Profile.
 - A desktop display session for GLFW. Headless terminals usually cannot run the game window without extra display setup.
 
-For Windows or macOS, update the `lwjgl.natives` property in `pom.xml` to the matching LWJGL classifier, such as `natives-windows`, `natives-macos`, or the platform-specific variant required by your machine.
+For Windows or macOS, update the `lwjgl.natives` property in `pom.xml` to the matching LWJGL classifier, such as `natives-windows` or `natives-macos`.
 
 ## Project Structure
 
 ```text
 .
 |-- pom.xml
-|-- dependency-reduced-pom.xml
-|-- 1982_toyota_hiace_combi.glb
-|-- traffic_slam_2_map.glb
+|-- source/                          # City map GLB asset
+|   `-- burnin_rubber_crash_n_burn_city.glb
+|-- 1982_toyota_hiace_combi.glb      # Player vehicle GLB asset
+|-- bmw_m4_competition_m_package.glb # Traffic vehicle GLB asset
+|-- assets/
+|   `-- passengers/
+|       |-- ATTRIBUTION.txt
+|       `-- passenger.glb            # Bundled CesiumMan character (CC-BY 4.0)
+|-- textures/                        # Extracted embedded GLTF textures
+|   |-- gltf_embedded_0.png ...
+|   `-- gltf_embedded_8.png
 |-- src/main/java/game
 |   |-- Main.java
+|   |-- core                         # Shared object contracts
+|   |   |-- GameObject.java
+|   |   |-- Renderable.java
+|   |   `-- Updatable.java
 |   |-- engine
 |   |   |-- Camera.java
 |   |   |-- Font.java
@@ -83,29 +128,141 @@ For Windows or macOS, update the `lwjgl.natives` property in `pom.xml` to the ma
 |   |-- scene
 |   |   |-- Entity.java
 |   |   `-- ModelLoader.java
-|   `-- ui
-|       `-- Menu.java
-`-- src/main/resources/shaders
-    |-- fragment.glsl
-    |-- menu_fragment.glsl
-    |-- menu_vertex.glsl
-    `-- vertex.glsl
+|   `-- scoring
+|       |-- ScoreEntry.java
+|       |-- Scoreboard.java
+|       `-- ScoreboardManager.java
+|-- src/main/resources/shaders
+|   |-- fragment.glsl
+|   |-- menu_fragment.glsl
+|   |-- menu_vertex.glsl
+|   `-- vertex.glsl
+`-- target/  (generated build output, do not edit)
 ```
 
-Generated files live in `target/`. Do not edit `.class` files under `target/classes`; edit the Java source under `src/main/java`.
+## Architecture Overview
+
+`game.Main` is the application coordinator. It creates the window, renderer, camera, game state, gameplay systems, models, entities, input callbacks, and main loop.
+
+The code is layered so higher layers depend only on lower ones:
+
+```mermaid
+graph TD
+    subgraph ui
+        Menu
+    end
+    subgraph gameplay
+        CityMap
+        CollisionSystem
+        GameState
+        HUD
+        MiniMap
+        Passenger
+        PlayerController
+        TrafficCar
+    end
+    subgraph scene
+        Entity
+        ModelLoader
+    end
+    subgraph engine
+        Camera
+        Font
+        Mesh
+        Renderer
+        ShaderProgram
+        Texture
+        Transform
+        Window
+    end
+    U --> gameplay
+    gameplay --> scene
+    scene --> engine
+
+    click U "src/main/java/game/ui/Menu.java"
+    click HUD "src/main/java/game/gameplay/HUD.java"
+    click Renderer "src/main/java/game/engine/Renderer.java"
+```
+
+## Runtime Flow
+
+```mermaid
+sequenceDiagram
+    participant Main
+    participant Window
+    participant ModelLoader
+    participant CityMap
+    participant GameState
+    participant HUD as Renderer/HUD
+
+    Main->>Window: create 1280x720 GLFW window
+    Main->>Model: load city & vehicle & passenger GLBs
+    Model-->>Main: mesh lists
+    Main->>Main: normalize scale/origin
+    Main->>CityMap: extract road samples, calc bounds
+    CityMap-->>Main: routes, passenger locations
+    Main->>Main: build traffic cars & passengers
+    loop main loop
+        Main->>GameState: update current screen
+        GameState-->>Main: tick timer/lives/score
+        Main->>HUD: render 3D world, then 2D overlays
+    end
+    Main->>Window: swap buffers
+```
+
+## Game State Machine
+
+The top-level screen flow is driven by `GameState.GameScreen`:
+
+```mermaid
+stateDiagram-v2
+    [*] --> MENU
+    MENU --> PLAYING : Enter / start
+    MENU --> MENU : Quit / Esc
+    PLAYING --> GAME_OVER : timer = 0 or lives = 0
+    PLAYING --> MENU : Esc
+```
+
+Scores earned in `PLAYING` are persisted through the `scoring` package (`ScoreboardManager`).
+
+## Passenger State Machine
+
+Each passenger follows a pickup/drop-off lifecycle:
+
+```mermaid
+stateDiagram-v2
+    [*] --> AVAILABLE
+    AVAILABLE --> CARRIED : in pickupRadius
+    CARRIED --> DELIVERED : in dropoffRadius
+    DELIVERED --> [*]
+```
+
+- Pickup and drop-off radii are `3.0f` world units in `Passenger.java`.
+
+## Bundled Assets
+
+The project ships the following GLB models:
+
+| Asset | Path | Size | Role | Attribution |
+| --- | --- | --- | --- | --- |
+| City map | `source/burnin_rubber_crash_n_burn_city.glb` | ~18 MB | City/map world geometry | Burnin' Rubber providers |
+| Player vehicle | `1982_toyota_hiace_combi.glb` | ~34 MB | Player car | Original asset author |
+| Traffic vehicle | `bmw_m4_competition_m_package.glb` | ~23 MB | Traffic car mesh clones | Original asset author |
+| Passenger | `assets/passengers/passenger.glb` | ~0.5 MB | Pickup/drop-off character | Cesium (CC-BY 4.0) |
+
+Embedded textures extracted from models at build time land in `textures/` (`gltf_embedded_0.png ... gltf_embedded_8.png`).
+
+Also bundled: `assets/passengers/ATTRIBUTION.txt` documenting the Cesium passenger model license.
 
 ## Quick Start
 
 From the repository root:
 
 ```bash
-mvn package
-java -jar target/city-racer-1.0.jar
+mvn package && java -jar target/city-racer-new-variation-ref-1.0.jar
 ```
 
-During the first Maven build, dependencies may need to be downloaded from Maven Central.
-
-The shaded jar is configured with `game.Main` as the entry point, so the `java -jar` command should open the game window directly.
+During the first Maven build, dependencies may need to be downloaded from Maven Central. The shaded jar is configured with `game.Main` as the entry point.
 
 ## How to Play
 
@@ -133,20 +290,17 @@ Controls:
 Rules:
 
 - Each delivered passenger is worth 100 points.
-- The timer starts at five minutes.
-- The player starts with three lives.
+- The timer starts at five minutes and the player has three lives.
 - Hitting traffic costs one life and returns the player to the spawn point.
 - The game ends when the timer reaches zero or lives reach zero.
 
 HUD:
 
-- Top left: score.
-- Top center: remaining time.
-- Top right: speed in km/h.
-- Bottom left: lives.
-- Left side: delivery count.
+- Top left: score. Top center: remaining time. Top right: speed in km/h.
+- Bottom left: lives. Left side: delivery count.
 - Center notification: nearest passenger or current drop-off objective.
-- Minimap: road samples, traffic routes, player direction, passengers, traffic, and spawn point.
+- Minimap: road samples, traffic, player direction, passengers, traffic, spawn point.
+- Main menu exposes a scoreboard of the top five scores (via `ScoreboardManager`).
 
 ## Build and Run Commands
 
@@ -180,66 +334,11 @@ The project does not currently define tests. If tests are added later, run them 
 mvn test
 ```
 
-## Architecture Overview
-
-`game.Main` is the application coordinator. It creates the window, renderer, camera, game state, gameplay systems, models, entities, input callbacks, and main loop.
-
-At runtime, the game follows this flow:
-
-1. Create a fixed-size 1280x720 GLFW window.
-2. Initialize OpenGL rendering.
-3. Load the city model from `traffic_slam_2_map.glb`.
-4. Load the player vehicle from `1982_toyota_hiace_combi.glb`.
-5. Normalize city and car model scale/origin.
-6. Extract road samples from city geometry.
-7. Calculate city bounds.
-8. Generate traffic routes and passenger locations.
-9. Build traffic cars and passenger objects.
-10. Enter the main loop.
-11. Update the current screen: menu, gameplay, or game-over.
-12. Render 3D world content first, then 2D HUD and minimap overlays.
-13. Clean up OpenGL resources and close the window.
-
-### Packages
-
-`game.engine` contains low-level rendering and platform utilities:
-
-- `Window`: GLFW window creation, input callbacks, buffer swapping, event polling, and shutdown.
-- `Renderer`: 3D entity rendering, 2D rectangles/lines/diamonds/text, shader setup, lighting uniforms, and frame state.
-- `ShaderProgram`: shader compilation, program linking, and uniform setters.
-- `Mesh`: OpenGL VAO/VBO/EBO storage plus bounds, material color, alpha, texture ID, and vertex lookup helpers.
-- `Texture`: STB image loading for file, embedded, and raw texture data.
-- `Font`: bitmap font atlas creation for HUD/menu text.
-- `Camera`: third-person camera view and perspective projection.
-- `Transform`: position, rotation, scale, origin offset, and model matrix construction.
-
-`game.scene` contains scene-level abstractions:
-
-- `Entity`: a renderable object with a mesh, transform, color, visibility flag, velocity, speed, and type.
-- `ModelLoader`: GLB/GLTF loading through Assimp, node traversal, mesh conversion, material color/alpha extraction, and texture loading.
-
-`game.gameplay` contains game rules and simulation:
-
-- `GameState`: current screen, score, lives, timer, menu selection, passenger state, and game reset logic.
-- `PlayerController`: car input state, acceleration, braking, friction, turning, movement, rotation, and camera follow updates.
-- `TrafficCar`: waypoint-following traffic movement and orientation.
-- `CityMap`: generated traffic routes and passenger pickup/drop-off points.
-- `Passenger`: pickup/drop-off state and range checks.
-- `CollisionSystem`: city bounds enforcement, player-vs-traffic checks, and building mesh collision resolution.
-- `HUD`: score, timer, speed, lives, delivery count, and passenger hint rendering.
-- `MiniMap`: map overlay rendering for roads, routes, player, traffic, passengers, and spawn.
-
-`game.ui` contains screen UI:
-
-- `Menu`: main menu, instructions, pulsing selection highlight, and game-over screen.
-
 ## Core Systems
 
 ### Main Loop
 
-The main loop in `Main.loop()` calculates `deltaTime`, polls window events, starts a new render frame, updates the active screen, and swaps buffers.
-
-`deltaTime` is capped to `0.05f` seconds to keep physics and movement from jumping too far after a long frame.
+The main loop in `Main.loop()` calculates `deltaTime`, polls window events, starts a new render frame, updates the active screen, and swaps buffers. `deltaTime` is capped to `0.05f` seconds to keep physics stable.
 
 ```java
 float deltaTime = (now - lastTime) / 1_000_000_000.0f;
@@ -248,48 +347,15 @@ if (deltaTime > 0.05f) deltaTime = 0.05f;
 
 ### Screen State
 
-`GameState.GameScreen` has three states:
-
-- `MENU`
-- `PLAYING`
-- `GAME_OVER`
-
-The menu handles start, instructions, and quit. Gameplay updates the timer, player, traffic, collisions, passengers, and scene rendering. Game-over draws the final score and delivered passenger count.
+`GameState.GameScreen` has three states: `MENU`, `PLAYING`, `GAME_OVER`. The menu handles start, instructions, scoreboard, and quit.
 
 ### Player Movement
 
-`PlayerController` implements arcade driving:
-
-- Forward acceleration: `12.0f`
-- Max forward speed: `30.0f`
-- Reverse speed limit: `40%` of max speed
-- Braking/reverse acceleration: `8.0f`
-- Turn speed: `2.5f`
-- Friction: `4.0f`
-
-The car moves along its forward vector, which is derived from the current Y rotation. The camera follows behind and above the car with smoothing.
-
-### Passenger Flow
-
-Passenger locations are generated by `CityMap`. In each gameplay update:
-
-1. If the player is within pickup radius of an available passenger, the passenger is picked up.
-2. If the player is carrying that passenger and enters the drop-off radius, the passenger is delivered.
-3. `GameState.deliverPassenger()` increments delivered counts and adds 100 points.
-
-Pickup and drop-off radii are currently `3.0f` world units in `Passenger`.
+`PlayerController` implements arcade driving (acceleration `12.0f`, max speed `30.0f`, reverse limit `40%`, braking `8.0f`, turn speed `2.5f`, friction `4.0f`). The camera follows behind and above the car with smoothing.
 
 ### Traffic
 
-Traffic cars are created from the player car mesh and assigned generated routes. Each traffic car moves toward its current waypoint, advances when close, wraps around the route, and rotates to face movement direction.
-
-Traffic speed is randomized in `Main.createTraffic()`:
-
-```java
-float speed = 4.0f + (float) Math.random() * 4.0f;
-```
-
-The number of traffic cars is capped at eight:
+Traffic cars are clones of the traffic model (`bmw_m4_competition_m_package.glb`) assigned generated routes. Speed is randomized (`4.0f + Math.random() * 4.0f`) and count is capped at eight:
 
 ```java
 int trafficCount = Math.min(8, carMeshes.size() * 8);
@@ -297,271 +363,133 @@ int trafficCount = Math.min(8, carMeshes.size() * 8);
 
 ### Collisions
 
-There are three collision-related behaviors:
-
-- City bounds: the player position is clamped to the calculated city bounds.
-- Building collision: building meshes push the player away from solid wall-like triangle edges.
-- Traffic collision: if the player is within two car radii of a traffic car, the player loses a life and respawns.
-
-The player has a crash cooldown of two seconds after respawning, preventing immediate repeat collisions.
+- City bounds: player position clamped to calculated bounds.
+- Buildings: solid mesh edges push the player away.
+- Traffic: contact within two car radii costs a life and respawns the player. A two-second crash cooldown prevents repeat collisions.
 
 ## Asset and Model Pipeline
 
-The project uses two root-level GLB assets:
-
-- `traffic_slam_2_map.glb`: city/map model.
-- `1982_toyota_hiace_combi.glb`: player/traffic vehicle model.
-
-`pom.xml` includes root-level `*.glb` and `*.gltf` files as packaged resources:
-
-```xml
-<resource>
-    <directory>${project.basedir}</directory>
-    <includes>
-        <include>*.glb</include>
-        <include>*.gltf</include>
-    </includes>
-</resource>
-```
-
-`ModelLoader.resolveModelPath()` searches in this order:
-
-1. The provided path directly.
-2. The current working directory.
-3. Nearby parent project directories.
-4. Packaged resources on the classpath.
-
-When a model is loaded from packaged resources, it is copied to a temporary file so Assimp can import it by path.
+The project uses five packaged GLB assets. `pom.xml` includes `*.glb` and `*.gltf` resources. `ModelLoader.resolveModelPath()` searches: the given path, the working directory, parent project directories, and packaged resources (copied to a temp file for Assimp).
 
 ### City Model Processing
 
-The city model is normalized in `Main.createCityScene()`:
-
-- Bounds are calculated from renderable meshes.
-- The center is shifted toward the origin.
-- Ground height is estimated from street/parking/crossing meshes.
-- Scale is derived from city width so the map fits gameplay space.
-- Collision and invisible meshes are skipped for rendering.
-
-Road samples are collected from meshes whose names look road-like:
-
-- `street`
-- `collisiontraffic`
-- `crosses`
-- `parking`
-- `bridge`
-- `tunnel`
-
-Lightmap and invisible meshes are ignored for road sampling.
+`Main.createCityScene()` normalizes bounds, shifts the center, estimates ground height from road-ish meshes (`street`, `parking`, `crosses`, `bridge`, `tunnel`), and scales to gameplay space. Collision and invisible meshes are skipped for rendering.
 
 ### Car Model Processing
 
-The vehicle model is normalized in `Main.createPlayerCar()`:
-
-- The mesh center is moved to the local origin.
-- The bottom of the model is placed at ground level.
-- The length is scaled to about `4.5f` world units.
-- Very tall or flat models are adjusted to stay usable.
-- The model uses a `PI` yaw offset so it faces the gameplay forward direction.
+`Main.createPlayerCar()` centers the mesh origin, seats the bottom at ground level, rescales the length to about `4.5f` units, and applies a `PI` yaw offset so the nose faces forward.
 
 ## Rendering and Shaders
 
-The renderer uses two shader programs:
+- 3D world shader: `src/main/resources/shaders/vertex.glsl` + `fragment.glsl`.
+- 2D UI/menu shader: `src/main/resources/shaders/menu_vertex.glsl` + `menu_fragment.glsl`.
 
-- 3D world shader:
-  - `src/main/resources/shaders/vertex.glsl`
-  - `src/main/resources/shaders/fragment.glsl`
-
-- 2D UI/menu shader:
-  - `src/main/resources/shaders/menu_vertex.glsl`
-  - `src/main/resources/shaders/menu_fragment.glsl`
-
-3D rendering:
-
-- Uses OpenGL depth testing.
-- Renders opaque entities first.
-- Renders transparent/lightmap entities after opaque entities with depth writes disabled.
-- Applies a simple directional light with ambient, diffuse, and specular components.
-- Uses model material colors and textures when available.
-
-2D rendering:
-
-- Disables depth testing.
-- Uses an orthographic projection based on a 1280x720 coordinate system.
-- Draws HUD/menu primitives with rectangles, lines, diamonds, and bitmap text.
-
-Text rendering:
-
-- `Renderer` tries to load a system font from common Linux paths.
-- If no font is found, text is drawn as placeholder blocks so the game can still run.
+3D rendering uses depth testing, opaque-then-transparent ordering, and a simple directional light with ambient, diffuse, and specular components. 2D rendering uses an orthographic 1280x720 projection for text, rectangles, lines, and diamonds. `Renderer` falls back to placeholder blocks when no system font is found.
 
 ## Gameplay Tuning Guide
-
-Common tuning points:
 
 | Goal | File | Values to edit |
 | --- | --- | --- |
 | Change game time | `src/main/java/game/gameplay/GameState.java` | `timeLimit` |
 | Change player lives | `src/main/java/game/gameplay/GameState.java` | `lives`, `startGame()` |
 | Change score per delivery | `src/main/java/game/gameplay/GameState.java` | `deliverPassenger()` |
-| Change acceleration/speed | `src/main/java/game/gameplay/PlayerController.java` | `acceleration`, `maxSpeed`, `braking`, `turnSpeed`, `friction` |
+| Change car physics | `src/main/java/game/gameplay/PlayerController.java` | `acceleration`, `maxSpeed`, `braking`, `turnSpeed`, `friction` |
 | Change pickup/drop-off radius | `src/main/java/game/gameplay/Passenger.java` | `pickupRadius`, `dropoffRadius` |
-| Change traffic count | `src/main/java/game/Main.java` | `trafficCount` in `createTraffic()` |
-| Change traffic speed | `src/main/java/game/Main.java` | speed expression in `createTraffic()` |
-| Change collision size | `src/main/java/game/gameplay/CollisionSystem.java` | `carCollisionRadius`, `buildingCollisionRadius`, `resolveCityCollisions()` call |
+| Change traffic count/speed | `src/main/java/game/Main.java` | `trafficCount`, speed in `createTraffic()` |
+| Change collision size | `src/main/java/game/gameplay/CollisionSystem.java` | `carCollisionRadius`, `buildingCollisionRadius` |
 | Change crash cooldown | `src/main/java/game/Main.java` | `CRASH_COOLDOWN_SECONDS` |
-| Change camera distance/height | `src/main/java/game/engine/Camera.java` | `distance`, `height`, `lookHeight` |
-| Change HUD layout | `src/main/java/game/gameplay/HUD.java` | draw coordinates and text |
+| Change camera sampling | `src/main/java/game/engine/Camera.java` | `distance`, `height`, `lookHeight` |
+| Change HUD/minimap layout | `src/main/java/game/gameplay/HUD.java`, `MiniMap.java` | draw coordinates and colors |
 | Change menu text | `src/main/java/game/ui/Menu.java` | menu/instruction strings |
-| Change minimap layout | `src/main/java/game/gameplay/MiniMap.java` | `X`, `Y`, `SIZE`, colors |
 
 ## Adding or Changing Content
 
-### Replace the Player Car
+### Replace a Vehicle
 
-1. Add a new `.glb` or `.gltf` file to the repository root.
-2. Update `CAR_MODEL_PATH` in `Main.java`.
-3. Run `mvn package`.
-4. Launch the game and check:
-   - The car appears.
-   - The car faces forward.
-   - The scale is usable.
-   - The bottom sits on the road.
-
-If the model faces the wrong direction, adjust `CAR_MODEL_YAW_OFFSET` in `Main.java`.
+1. Drop a new `.glb`/`.gltf` in the repository root.
+2. Update `CAR_MODEL_PATH` / `TRAFFIC_CAR_MODEL_PATH` in `Main.java`.
+3. `mvn package`, then check appearance, orientation (`CAR_MODEL_YAW_OFFSET`), and scale/roof placement.
 
 ### Replace the City Map
 
-1. Add the new city `.glb` or `.gltf` file to the repository root.
+1. Add the city `.glb`/`.gltf`.
 2. Update `CITY_MODEL_PATH` in `Main.java`.
-3. Check mesh names in the model. The current road extraction and collision rules depend on names containing words like `street`, `parking`, `crosses`, `bridge`, `tunnel`, `building`, or `collision`.
-4. Run the game and watch the startup logs for:
-   - Loaded mesh count.
-   - City bounds.
-   - Road sample count.
-   - Skipped non-visual meshes.
+3. Name road meshes with road-like words (`street`, `parking`, `crosses`, `bridge`, `tunnel`) and buildings with `building`.
+4. Watch startup logs for loaded mesh count, bounds, and road sample count.
 
-For best results, name road meshes with road-like words and building meshes with `building`.
+### Add a Passenger
 
-### Add More Passengers
+Edit `CityMap.generateRoadSamplePassengerLocations()` (or `generatePassengerLocations()` if no road samples). Each passenger needs pickup/drop-off `Vector2f` coordinates plus a name.
 
-Passenger locations are generated in `CityMap`.
+### Add Traffic Routes
 
-If road samples are available, edit:
-
-```java
-generateRoadSamplePassengerLocations()
-```
-
-If road samples are not available, edit:
-
-```java
-generatePassengerLocations()
-```
-
-Each passenger needs:
-
-- a pickup `Vector2f`
-- a drop-off `Vector2f`
-- a name
-
-### Add More Traffic Routes
-
-Traffic routes are generated in `CityMap.generateRoutes()` or `CityMap.generateRoadSampleRoutes()`.
-
-Routes are lists of `Vector2f` waypoints. `TrafficCar` loops through the list and wraps back to the beginning.
+Routes are lists of `Vector2f` waypoints produced by `CityMap.generateRoutes()` / `CityMap.generateRoadSampleRoutes()`. `TrafficCar` loops waypoints and wraps around.
 
 ### Add a New HUD Element
 
-1. Add data to `GameState` or another gameplay class.
-2. Pass the data to `HUD.render(...)`, or let `HUD` read it from `GameState`.
-3. Draw it with `renderer.drawText`, `renderer.drawRect`, `renderer.drawLine`, or `renderer.drawDiamond`.
-
-The HUD uses fixed 1280x720 coordinates.
+1. Add data to `GameState`.
+2. Pass it to `HUD.render(...)`.
+3. Draw via `renderer.drawText`, `renderer.drawRect`, `renderer.drawLine`, or `renderer.drawDiamond`.
 
 ### Add a New Shader Uniform
 
-1. Add the uniform to the relevant GLSL shader file.
-2. Add a setter call in `Renderer`.
-3. If needed, add a helper method in `ShaderProgram`.
-4. Rebuild and run the game.
+1. Declare it in the GLSL shader.
+2. Add a setter call in `Renderer`, with a helper in `ShaderProgram` if needed.
 
 ## Troubleshooting
 
-### `Unsupported class file major version` or compilation fails
+### `Unsupported class file major version` or compile failure
 
-The project is configured for Java 26. Install JDK 26+, or lower the Maven compiler source/target values in `pom.xml` if you intend to build with an older JDK.
+Install JDK 21+ or lower `maven.compiler.source/target` in `pom.xml`.
 
 ### LWJGL native library errors
 
-Check the `lwjgl.natives` property in `pom.xml`. This project is currently configured for Linux:
+This project targets `natives-linux`. Change the `lwjgl.natives` property for your OS.
 
-```xml
-<lwjgl.natives>natives-linux</lwjgl.natives>
-```
+### Window does not open
 
-Use the correct classifier for your OS and architecture.
-
-### The game window does not open
-
-Common causes:
-
-- No desktop display session is available.
-- OpenGL 3.3 Core Profile is not supported by the GPU/driver.
-- GLFW cannot initialize in the current environment.
-- Remote SSH session does not have X11/Wayland forwarding.
+Check for a desktop display session, OpenGL 3.3 Core support, and that GLFW is well-initialized; headless or SSH sessions usually cannot open the window.
 
 ### Models do not load
 
-Check:
+The `mvn package` run must include the GLB/GLTF resources. Verify `CAR_MODEL_PATH`, `CITY_MODEL_PATH`, `TRAFFIC_CAR_MODEL_PATH`, `PASSENGER_MODEL_PATH` match file paths. Startup logs show whether Assimp reported an import error. The project falls back to placeholder geometry.
 
-- The model file exists at the repository root.
-- `CAR_MODEL_PATH` and `CITY_MODEL_PATH` match the file names exactly.
-- The file is included by Maven resources if running from the packaged jar.
-- Startup logs show whether Assimp produced an import error.
+### Car spawns in a strange place
 
-If the model cannot load, the project falls back to generated placeholder geometry, so a successful window does not always mean the intended assets loaded.
-
-### The car spawns in a strange place
-
-Spawn placement depends on detected road geometry. For custom maps:
-
-- Make sure road meshes have names containing `street`, `parking`, or `crosses`.
-- Make sure road surfaces are mostly horizontal.
-- Check the startup log for the number of collected road samples.
+Spawn placement depends on detected road geometry. Ensure road meshes are named with road-like words and kept mostly horizontal.
 
 ### Building collisions do not work
 
-`CollisionSystem` treats city meshes as solid only when their mesh name contains `building`. Rename relevant meshes or adjust `isSolidCityMesh()`.
+`CollisionSystem.isSolidCityMesh()` only treats meshes whose name contains `building` as solid. Rename meshes or adjust the predicate.
 
 ### Road height is wrong
 
-Road height sampling uses road-like mesh names and horizontal triangles. For custom maps:
-
-- Name road meshes with `street`, `crosses`, `parking`, `bridge`, or `tunnel`.
-- Avoid marking visual road meshes as `collision` or `invisible`, because those are ignored by some sampling paths.
-- Check whether the map has multiple road layers close together.
+Road height sampling relies on road-like mesh names and horizontal triangles. Avoid marking road meshes `collision` or `invisible` for some sampling paths.
 
 ### Text appears as blocks
 
-The renderer could not find a system font. Install one of the common fonts checked by `Renderer`, or update the font path list in `Renderer`.
+The system font loader could not find a font. Install a common font from `Renderer`'s path list or update the list.
 
 ## Development Notes
 
-- The codebase currently has no automated test suite.
-- The window size is fixed at 1280x720.
-- HUD/menu/minimap coordinates are hard-coded for that fixed size.
-- The project uses a small custom engine instead of a full game framework.
-- Generated build outputs are stored in `target/`.
-- `dependency-reduced-pom.xml` is produced by the Maven Shade plugin and is not the primary build file.
-- The packaged jar includes shaders and root-level GLB/GLTF assets through Maven resources.
+- No GUI console required at runtime (window renders for the game), but the run environment needs OpenGL + GLFW.
+- The codebase currently has no automated test suite; `mvn test` is safe to run but exits with no tests.
+- Window size is fixed at 1280x720; HUD/menu/minimap coordinates are hard-coded for it.
+- This is a small custom engine, not a full framework.
+- Build outputs go to `target/`; `dependency-reduced-pom.xml` is generated by the Shade plugin.
+- Score persistence currently writes to `scoreboard.txt`.
+- Scores also exist in `scoring/` (`Scoreboard.java` central manager).
 
 ## Suggested Next Improvements
 
 - Add Maven profiles for Linux, Windows, and macOS LWJGL natives.
 - Add a resize-aware renderer and HUD layout.
 - Add sound effects for pickup, delivery, collision, and menu navigation.
-- Add unit tests for `CityMap`, `Passenger`, `GameState`, and route generation.
+- Add unit tests for `CityMap`, `Passenger`, `GameState`, routes, and scoring.
 - Add debug toggles for road samples, city bounds, collision bounds, and route lines.
-- Add a pause screen instead of returning directly to the menu on `Esc`.
-- Add model attribution/license notes for bundled GLB assets.
+- Add a pause screen instead of returning straight to the menu on `Esc`.
+- Credit the non-Cesium assets authors in `assets/` next to their files.
+
+## Related Documents
+
+- `MARIA_DESIGN_DIAGRAM.md` — proposed relational (MariaDB) schema mapping the game's runtime design.
