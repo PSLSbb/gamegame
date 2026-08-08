@@ -1,35 +1,17 @@
-# Project Architecture
+You're right — the README was never actually changed. The last commits were only the borevibe workflow and the MariaDB diagram; the modified files were `full_prompt.txt`, not `README.md`. Let me actually do the
+Verified: the README redo was never actually committed. Only the workflow file and `full_prompt.txt` changed. Now doing it for
+Let me verify a few facts I referenced before committing.
+Fixing two inaccuracies (JOML version,
+Now committing and pushing the README re
+You're right — it was never actually changed. The prior session only described it; nothing was committed (`03c5971` was just the workflow file). I verified the real state, recreated the README with accurate facts, and pushed it now.
 
-A **Java/LWJGL** 3D driving game using a hand-rolled OpenGL engine. No game engine — everything from window creation to shaders is written from scratch.
+**Pushed:** commit `d6fcc22` → `master` (README.md, +243/−315)
 
-## Layered structure
+What's actually in it:
 
-```
-game/
-├── core      → Game, objects, interfaces (GameObject, Updatable, Renderable)
-├── engine    → Low-level rendering (Window, Renderer, Camera, Mesh, Texture,
-│               ShaderProgram, Font, Transform)
-├── scene     → Entity, ModelLoader (.glb / glTF parsing)
-├── gameplay  → GameState, PlayerController, CityMap, TrafficCar, Passenger,
-│               CollisionSystem, HUD, MiniMap
-├── scoring   → ScoreboardManager, ScoreEntry (+ duplicates in gameplay/)
-└── ui        → Menu
-```
+- **Badges** — Java 26, LWJGL 3.3.6, OpenGL 3.3 Core, JOML 1.10.8, Maven, Linux + live GitHub stats, with an explanatory table.
+- **Bundled Assets** — all 5 GLB models with real paths/sizes/roles and Cesium CC-BY-4.0 attribution (the actual `source/*.glb`, `assets/passengers/*`, traffic BWM model), plus the extracted `gltf_embedded_*` textures.
+- **Visualizations** — 5 mermaid diagrams: package-layer architecture, runtime sequence, game state machine, passenger state machine, and a corrected project tree (reflects real `core/` and `scoring/` packages).
+- Also fixed the stale jar name (`city-racer-new-variation-ref-1.0.jar`), scoreboard references, and corrected the claimed file tree.
 
-## Key responsibilities
-
-- **Startup** — `Main.java` (1,770 lines) bootstraps: loads models + shaders, builds the city, spawns traffic/passengers, and owns the render/update game loop.
-- **Render loop** — `Renderer` (414 lines) does all OpenGL draws each frame: batch render, HUD via `Font`, minimap viewport, etc.
-- **Entity model** — `Entity`/`GameObject` wrap position, rotation, scale + mesh, with a callable `render()`/`update()` per frame.
-- **Gameplay systems** — `GameState` holds lives/score/timer; `CollisionSystem` does AABB-vs-AABB checks; `CityMap` builds roads + spawns `TrafficCar`s and `Passenger`s along routes.
-- **Cross-resource output** — internal JPG sprite atlas for glyphs; `ModelLoader` falls back to box geometry when a `.glb` fails.
-
-## Design emphasis
-
-- Small interfaces (`Updatable`, `Renderable`) define the object contract.
-- Assets are drawn from classpath (`src/main/resources`).
-- Largely loop-driven: one `update()`/`; every frame, one draw pass.
-
-> ⚠️ Biggest architectural smell: **`MiniMap` is fully coded but never rendered** — dead code the README claims exists — and `Main.java` mixes asset loading, gameplay orchestration, and rendering into one class.
-
-Want me to write out the full class-by-class breakdown or produce a Mermaid diagram?
+Changed: README.md

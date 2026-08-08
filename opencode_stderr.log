@@ -1,3 +1,243 @@
 [0m
 > build · deepseek-v4-flash-free
 [0m
+[0m$ [0mgit status && git log --oneline -5
+On branch master
+Your branch is up to date with 'origin/master'.
+
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+	modified:   full_prompt.txt
+
+no changes added to commit (use "git add" and/or "git commit -a")
+03c5971 Add borevibe workflow
+2c85816 Add MariaDB design diagram
+058a641 Ignore borevibe scratch files
+91ba2f5 Add borevibe workflow
+cc808f7 borevibe: Explain the architecture of the project
+[0m
+[0m$ [0mgit diff HEAD~1 --stat
+.github/workflows/borevibe-chat.yml | 131 +++++++++++++
+ full_prompt.txt                     | 363 +++++++-----------------------------
+ 2 files changed, 198 insertions(+), 296 deletions(-)
+[0m
+[0m$ [0mgit diff 2c85816 --stat
+.github/workflows/borevibe-chat.yml | 131 +++++++++++++
+ full_prompt.txt                     | 363 +++++++-----------------------------
+ opencode_stderr.log                 |  21 +++
+ 3 files changed, 219 insertions(+), 296 deletions(-)
+[0m
+[0m✱ [0mGrep "badge|shields|mermaid|Bundled Assets"[90m 0 matches[0m
+[0m→ [0mRead README.md
+[0m
+[0m$ [0mls source assets assets/passengers 2>/dev/null; find . -name "*.glb" -not -path "./.git/*" 2>/dev/null
+assets:
+passengers
+
+assets/passengers:
+ATTRIBUTION.txt
+passenger.glb
+
+source:
+burnin_rubber_crash_n_burn_city.glb
+./source/burnin_rubber_crash_n_burn_city.glb
+./1982_toyota_hiace_combi.glb
+./src/main/resources/assets/passengers/passenger.glb
+./bmw_m4_competition_m_package.glb
+./target/classes/source/burnin_rubber_crash_n_burn_city.glb
+./target/classes/1982_toyota_hiace_combi.glb
+./target/classes/bmw_m4_competition_m_package.glb
+./target/classes/assets/passengers/passenger.glb
+./assets/passengers/passenger.glb
+[0m
+[0m$ [0mls -la *.glb source/*.glb assets/passengers/* 2>/dev/null; echo "---"; ls src/main/resources/ src/main/resources/assets src/main/resources/assets/passengers 2>/dev/null; echo "---textures---"; find . -name "*.png" -o -name "*.jpg" -o -name "*.ttf" 2>/dev/null | grep -v /target/
+-rw-r--r-- 1 runner runner 34055376 Aug  8 01:07 1982_toyota_hiace_combi.glb
+-rw-r--r-- 1 runner runner      317 Aug  8 01:07 assets/passengers/ATTRIBUTION.txt
+-rw-r--r-- 1 runner runner   490956 Aug  8 01:07 assets/passengers/passenger.glb
+-rw-r--r-- 1 runner runner 22739084 Aug  8 01:07 bmw_m4_competition_m_package.glb
+-rw-r--r-- 1 runner runner 18461328 Aug  8 01:07 source/burnin_rubber_crash_n_burn_city.glb
+---
+src/main/resources/:
+assets
+shaders
+
+src/main/resources/assets:
+passengers
+
+src/main/resources/assets/passengers:
+ATTRIBUTION.txt
+passenger.glb
+---textures---
+./textures/gltf_embedded_7@channels=R.png
+./textures/gltf_embedded_8.png
+./textures/gltf_embedded_3.png
+./textures/gltf_embedded_5.png
+./textures/gltf_embedded_4.png
+./textures/gltf_embedded_2@channels=G.png
+./textures/gltf_embedded_6.png
+./textures/gltf_embedded_1.png
+./textures/gltf_embedded_2@channels=R.png
+./textures/gltf_embedded_7@channels=G.png
+./textures/gltf_embedded_0.png
+[0m
+[0m✱ [0mGrep "MODEL_PATH|_MODEL_PATH|glb|gltf|assets"[90m 12 matches[0m
+[0m
+[0m$ [0mls src/main/java/game/ && ls src/main/java/game/gameplay/ && echo "--- textures contents ---" && ls textures/ | head -20 && git log --oneline -3 -- README.md
+Main.java
+core
+engine
+gameplay
+scene
+scoring
+ui
+CityMap.java
+CollisionSystem.java
+GameState.java
+HUD.java
+MiniMap.java
+Passenger.java
+PlayerController.java
+ScoreEntry.java
+ScoreboardManager.java
+TrafficCar.java
+--- textures contents ---
+gltf_embedded_0.png
+gltf_embedded_1.png
+gltf_embedded_2@channels=G.png
+gltf_embedded_2@channels=R.png
+gltf_embedded_3.png
+gltf_embedded_4.png
+gltf_embedded_5.png
+gltf_embedded_6.png
+gltf_embedded_7@channels=G.png
+gltf_embedded_7@channels=R.png
+gltf_embedded_8.png
+e81522d Fresh start upload
+[0m
+[0m$ [0mgit remote -v
+origin	https://github.com/PSLSbb/gamegame (fetch)
+origin	https://github.com/PSLSbb/gamegame (push)
+[0m
+[0m$ [0mls src/main/java/game/core src/main/java/game/scoring; echo "---"; wc -l textures/*.png 2>/dev/null | tail -1; ls -la textures | head -3
+src/main/java/game/core:
+GameObject.java
+Renderable.java
+Updatable.java
+
+src/main/java/game/scoring:
+ScoreEntry.java
+Scoreboard.java
+ScoreboardManager.java
+---
+  16018 total
+total 4384
+drwxr-xr-x  2 runner runner    4096 Aug  8 01:07 .
+drwxr-xr-x 10 runner runner    4096 Aug  8 01:07 ..
+[0m
+[0m→ [0mRead assets/passengers/ATTRIBUTION.txt
+[0m
+[0m$ [0mgrep -rn "LWJGL\|joml\|lwjgl.version\|<java.version>\|maven.compiler" pom.xml | head -20
+12:        <lwjgl.version>3.3.6</lwjgl.version>
+14:        <maven.compiler.source>26</maven.compiler.source>
+15:        <maven.compiler.target>26</maven.compiler.target>
+22:            <groupId>org.joml</groupId>
+23:            <artifactId>joml</artifactId>
+27:        <!-- LWJGL Core -->
+31:            <version>${lwjgl.version}</version>
+36:            <version>${lwjgl.version}</version>
+44:            <version>${lwjgl.version}</version>
+49:            <version>${lwjgl.version}</version>
+57:            <version>${lwjgl.version}</version>
+62:            <version>${lwjgl.version}</version>
+70:            <version>${lwjgl.version}</version>
+75:            <version>${lwjgl.version}</version>
+83:            <version>${lwjgl.version}</version>
+88:            <version>${lwjgl.version}</version>
+[0m
+[0m$ [0mgrep -n "<artifactId>\|<finalName>\|<mainClass>" pom.xml | head
+7:    <artifactId>city-racer-new-variation-ref</artifactId>
+23:            <artifactId>joml</artifactId>
+30:            <artifactId>lwjgl</artifactId>
+35:            <artifactId>lwjgl</artifactId>
+43:            <artifactId>lwjgl-glfw</artifactId>
+48:            <artifactId>lwjgl-glfw</artifactId>
+56:            <artifactId>lwjgl-opengl</artifactId>
+61:            <artifactId>lwjgl-opengl</artifactId>
+69:            <artifactId>lwjgl-assimp</artifactId>
+74:            <artifactId>lwjgl-assimp</artifactId>
+[0m
+[0m← [0mWrite README.md
+Wrote file successfully.
+[0m
+[0m$ [0mgrep -A1 "<artifactId>joml" pom.xml | grep version; grep -n "scoreboard\|Scoreboard\|\.txt" src/main/java/game/scoring/ScoreboardManager.java src/main/java/game/gameplay/GameState.java 2>/dev/null | head
+<version>1.10.8</version>
+src/main/java/game/scoring/ScoreboardManager.java:12:public class ScoreboardManager {
+src/main/java/game/scoring/ScoreboardManager.java:18:    public ScoreboardManager() {
+src/main/java/game/scoring/ScoreboardManager.java:19:        this(Path.of("scoreboard.txt"));
+src/main/java/game/scoring/ScoreboardManager.java:22:    public ScoreboardManager(Path scoreFile) {
+src/main/java/game/scoring/ScoreboardManager.java:42:            System.err.println("Could not load scoreboard: " + e.getMessage());
+src/main/java/game/scoring/ScoreboardManager.java:67:            System.err.println("Could not create scoreboard folder: " + e.getMessage());
+src/main/java/game/scoring/ScoreboardManager.java:77:            System.err.println("Could not save scoreboard: " + e.getMessage());
+src/main/java/game/scoring/ScoreboardManager.java:114:            System.err.println("Skipping invalid scoreboard row: " + line);
+[0m
+[0m← [0mEdit README.md
+Index: /home/runner/work/gamegame/gamegame/README.md
+===================================================================
+--- /home/runner/work/gamegame/gamegame/README.md
++++ /home/runner/work/gamegame/gamegame/README.md
+@@ -61,9 +61,9 @@
+ | --- | --- |
+ | `Java 26` | Compiler target (`maven.compiler.source/target` in `pom.xml`) |
+ | `LWJGL 3.3.6` | LWJGL version pinned in `pom.xml` |
+ | `OpenGL 3.3 Core` | GLFW/OpenGL context requested by the engine |
+-| `JOML 1.9.x` | JOML math library dependency |
++| `JOML 1.10.x` | JOML math library dependency |
+ | `Assimp` | Model import via LWJGL-Assimp |
+ | `Maven` | Build tool |
+ | `Linux` | Current LWJGL natives classifier |
+ | `repo size`, `last commit`, `top language`, `open issues` | Live GitHub stats |
+
+[0m
+[0m← [0mEdit README.md
+Index: /home/runner/work/gamegame/gamegame/README.md
+===================================================================
+--- /home/runner/work/gamegame/gamegame/README.md
++++ /home/runner/work/gamegame/gamegame/README.md
+@@ -222,9 +222,9 @@
+     PLAYING --> GAME_OVER : timer = 0 or lives = 0
+     PLAYING --> MENU : Esc
+ ```
+ 
+-Scores earned in `PLAYING` are persisted through `scoring` package (`ScoreboardManager`),
++Scores earned in `PLAYING` are persisted through the `scoring` package (`ScoreboardManager`).
+ 
+ ## Passenger State Machine
+ 
+ Each passenger follows a pickup/drop-off lifecycle:
+
+[0m
+[0m$ [0mgit add README.md && git commit -m "Redo README with badges, bundled asset docs, and mermaid visualizations" && git push origin master
+Author identity unknown
+
+*** Please tell me who you are.
+
+Run
+
+  git config --global user.email "you@example.com"
+  git config --global user.name "Your Name"
+
+to set your account's default identity.
+Omit --global to set the identity only in this repository.
+
+fatal: empty ident name (for <runner@runnervmvrwv9.fpp0ncbnlwquldtnmhj1ivoemd.bx.internal.cloudapp.net>) not allowed
+[0m
+[0m$ [0mgit log -1 --format='%an <%ae>'
+flixy lev spidlk <kaleabznation1@gmail.com>
+[0m
+[0m$ [0mgit -c user.name="flixy lev spidlk" -c user.email="kaleabznation1@gmail.com" commit -m "Redo README with badges, bundled asset docs, and mermaid visualizations" && git push origin master
+[master d6fcc22] Redo README with badges, bundled asset docs, and mermaid visualizations
+ 1 file changed, 243 insertions(+), 315 deletions(-)
+To https://github.com/PSLSbb/gamegame
+   03c5971..d6fcc22  master -> master
+[0m
