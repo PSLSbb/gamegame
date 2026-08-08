@@ -1,3 +1,176 @@
 [0m
 > build · deepseek-v4-flash-free
 [0m
+[0m→ [0mRead README.md
+[0m
+[0m$ [0mls -la && git log --oneline -5
+total 77996
+drwxr-xr-x 10 runner runner     4096 Aug  8 01:04 .
+drwxr-xr-x  3 runner runner     4096 Aug  8 01:03 ..
+drwxr-xr-x  2 runner runner     4096 Aug  8 01:03 .borevibe
+drwxr-xr-x  7 runner runner     4096 Aug  8 01:04 .git
+drwxr-xr-x  3 runner runner     4096 Aug  8 01:03 .github
+-rw-r--r--  1 runner runner      176 Aug  8 01:03 .gitignore
+-rw-r--r--  1 runner runner 34055376 Aug  8 01:03 1982_toyota_hiace_combi.glb
+-rw-r--r--  1 runner runner     7633 Aug  8 01:03 MARIA_DESIGN_DIAGRAM.md
+-rw-r--r--  1 runner runner     3320 Aug  8 01:03 OOP_REFACTOR_GUIDE.md
+-rw-r--r--  1 runner runner     9449 Aug  8 01:03 PROJECT_REVIEW.md
+-rw-r--r--  1 runner runner    20127 Aug  8 01:03 README.md
+-rw-r--r--  1 runner runner     2048 Aug  8 01:03 ai_reply.txt
+-rw-r--r--  1 runner runner        0 Aug  8 01:04 ai_reply_raw.txt
+drwxr-xr-x  3 runner runner     4096 Aug  8 01:03 assets
+-rw-r--r--  1 runner runner 22739084 Aug  8 01:03 bmw_m4_competition_m_package.glb
+-rw-r--r--  1 runner runner 22917411 Aug  8 01:03 burnin-rubber-crash-n-burn-city.zip
+-rw-r--r--  1 runner runner     2285 Aug  8 01:03 dependency-reduced-pom.xml
+-rw-r--r--  1 runner runner     4986 Aug  8 01:04 full_prompt.txt
+-rw-r--r--  1 runner runner    14773 Aug  8 01:03 history.txt
+-rw-r--r--  1 runner runner      173 Aug  8 01:03 opencode.json
+-rw-r--r--  1 runner runner       71 Aug  8 01:04 opencode_stderr.log
+-rw-r--r--  1 runner runner     5355 Aug  8 01:03 pom.xml
+-rw-r--r--  1 runner runner       21 Aug  8 01:03 scoreboard.txt
+drwxr-xr-x  2 runner runner     4096 Aug  8 01:03 source
+drwxr-xr-x  3 runner runner     4096 Aug  8 01:03 src
+drwxr-xr-x  5 runner runner     4096 Aug  8 01:03 target
+drwxr-xr-x  2 runner runner     4096 Aug  8 01:03 textures
+03c5971 Add borevibe workflow
+2c85816 Add MariaDB design diagram
+058a641 Ignore borevibe scratch files
+91ba2f5 Add borevibe workflow
+cc808f7 borevibe: Explain the architecture of the project
+[0m
+[0m$ [0mls -R assets source textures .github 2>/dev/null | head -60
+.github:
+workflows
+
+.github/workflows:
+borevibe-chat.yml
+borevibe.yml
+
+assets:
+passengers
+
+assets/passengers:
+ATTRIBUTION.txt
+passenger.glb
+
+source:
+burnin_rubber_crash_n_burn_city.glb
+
+textures:
+gltf_embedded_0.png
+gltf_embedded_1.png
+gltf_embedded_2@channels=G.png
+gltf_embedded_2@channels=R.png
+gltf_embedded_3.png
+gltf_embedded_4.png
+gltf_embedded_5.png
+gltf_embedded_6.png
+gltf_embedded_7@channels=G.png
+gltf_embedded_7@channels=R.png
+gltf_embedded_8.png
+[0m
+[0m→ [0mRead pom.xml
+[0m→ [0mRead PROJECT_REVIEW.md
+[0m→ [0mRead MARIA_DESIGN_DIAGRAM.md
+[0m→ [0mRead assets/passengers/ATTRIBUTION.txt
+[0m
+[0m$ [0mcd /home/runner/work/gamegame/gamegame && wc -l src/main/java/game/Main.java && find src/main/java -name "*.java" | wc -l && git log --oneline -3 && du -h *.glb assets/passengers/*.glb source/*.glb
+1770 src/main/java/game/Main.java
+28
+03c5971 Add borevibe workflow
+2c85816 Add MariaDB design diagram
+058a641 Ignore borevibe scratch files
+33M	1982_toyota_hiace_combi.glb
+22M	bmw_m4_competition_m_package.glb
+480K	assets/passengers/passenger.glb
+18M	source/burnin_rubber_crash_n_burn_city.glb
+[0m
+[0m→ [0mRead OOP_REFACTOR_GUIDE.md
+[0m→ [0mRead .github/workflows/borevibe.yml
+[0m→ [0mRead .github/workflows/borevibe-chat.yml
+[0m
+[0m$ [0mcd /home/runner/work/gamegame/gamegame && git remote -v && git branch --show-current && cat scoreboard.txt && ls target/*.jar 2>/dev/null
+origin	https://github.com/PSLSbb/gamegame (fetch)
+origin	https://github.com/PSLSbb/gamegame (push)
+master
+kaleab,100,300.01004
+target/city-racer-new-variation-ref-1.0.jar
+target/original-city-racer-new-variation-ref-1.0.jar
+[0m
+[0m$ [0mcd /home/runner/work/gamegame/gamegame && ls textures/*.png | wc -l && du -sh textures source assets 2>/dev/null && cat .gitignore
+11
+4.3M	textures
+18M	source
+492K	assets
+# borevibe — scratch and conversation files (never commit these)
+.borevibe/
+ai_reply.txt
+ai_reply_raw.txt
+full_prompt.txt
+history.txt
+opencode_prompt.txt
+opencode_stderr.log
+[0m
+[0m✱ [0mGrep "MODEL_PATH|LIGHTMAP|\.glb|\.gltf|CITY_|CAR_"[90m in src/main/java/game · 17 matches[0m
+[0m
+[0m$ [0mcd /home/runner/work/gamegame/gamegame && find src/main/java -type f -name "*.java" | sort
+src/main/java/game/Main.java
+src/main/java/game/core/GameObject.java
+src/main/java/game/core/Renderable.java
+src/main/java/game/core/Updatable.java
+src/main/java/game/engine/Camera.java
+src/main/java/game/engine/Font.java
+src/main/java/game/engine/Mesh.java
+src/main/java/game/engine/Renderer.java
+src/main/java/game/engine/ShaderProgram.java
+src/main/java/game/engine/Texture.java
+src/main/java/game/engine/Transform.java
+src/main/java/game/engine/Window.java
+src/main/java/game/gameplay/CityMap.java
+src/main/java/game/gameplay/CollisionSystem.java
+src/main/java/game/gameplay/GameState.java
+src/main/java/game/gameplay/HUD.java
+src/main/java/game/gameplay/MiniMap.java
+src/main/java/game/gameplay/Passenger.java
+src/main/java/game/gameplay/PlayerController.java
+src/main/java/game/gameplay/ScoreEntry.java
+src/main/java/game/gameplay/ScoreboardManager.java
+src/main/java/game/gameplay/TrafficCar.java
+src/main/java/game/scene/Entity.java
+src/main/java/game/scene/ModelLoader.java
+src/main/java/game/scoring/ScoreEntry.java
+src/main/java/game/scoring/Scoreboard.java
+src/main/java/game/scoring/ScoreboardManager.java
+src/main/java/game/ui/Menu.java
+[0m
+[0m← [0mWrite README.md
+Wrote file successfully.
+[0m
+[0m← [0mEdit README.md
+Index: /home/runner/work/gamegame/gamegame/README.md
+===================================================================
+--- /home/runner/work/gamegame/gamegame/README.md
++++ /home/runner/work/gamegame/gamegame/README.md
+@@ -6,9 +6,10 @@
+ ![Maven](https://img.shields.io/badge/Maven-3.8%2B-red?style=for-the-badge&logo=apachemaven&logoColor=white)
+ ![JOML](https://img.shields.io/badge/JOML-1.10.8-6f42c1?style=for-the-badge)
+ ![Platform](https://img.shields.io/badge/Platform-Linux%2FWin%2FmacOS-lightgrey?style=for-the-badge)
+ 
+-![Lines of code](https://img.shields.io/badge/dynamic/xml?url=https%3A%2F%2Fraw.githubusercontent.com%2FPSLSbb%2Fgamegame%2Fmaster%2Fpom.xml&query=%2F%2Ftext()&style=flat-square&label=Source%20files&color=informational)
++![Source files](https://img.shields.io/badge/Java%20files-28-informational?style=flat-square&label=Source%20files)
++![Lines of code](https://img.shields.io/badge/LOC-5%2C600%2B-blueviolet?style=flat-square&label=Lines%20of%20code)
+ ![Repo size](https://img.shields.io/github/repo-size/PSLSbb/gamegame?style=flat-square&label=Repo%20size)
+ ![Last commit](https://img.shields.io/github/last-commit/PSLSbb/gamegame/master?style=flat-square&label=Last%20commit)
+ ![Language](https://img.shields.io/github/languages/top/PSLSbb/gamegame?style=flat-square&label=Top%20language)
+ ![Open issues](https://img.shields.io/github/issues/PSLSbb/gamegame?style=flat-square&label=Open%20issues)
+
+[0m
+[0m$ [0mcd /home/runner/work/gamegame/gamegame && node -e "const s=require('fs').readFileSync('README.md','utf8'); const blocks=[...s.matchAll(/``````mermaid([\s\S]*?)``````/g)]; console.log('mermaid blocks:', blocks.length);"
+mermaid blocks: 5
+[0m
+[0m$ [0mcd /home/runner/work/gamegame/gamegame && git diff --stat
+README.md           | 173 ++++++++++++++++++++++----
+ full_prompt.txt     | 352 +++++++++-------------------------------------------
+ opencode_stderr.log | 167 +++++++++++++++++++++++++
+ 3 files changed, 375 insertions(+), 317 deletions(-)
+[0m
