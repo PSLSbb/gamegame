@@ -1,3 +1,113 @@
 [0m
 > build · deepseek-v4-flash-free
 [0m
+[0m$ [0mgit status && echo "---" && git log --oneline -5
+On branch master
+Your branch is up to date with 'origin/master'.
+
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+	modified:   full_prompt.txt
+
+no changes added to commit (use "git add" and/or "git commit -a")
+---
+058a641 Ignore borevibe scratch files
+91ba2f5 Add borevibe workflow
+cc808f7 borevibe: Explain the architecture of the project
+a88c8a3 Add borevibe workflow
+83dea4b borevibe: Read and explain this project in simple English then rate it out of 10 on different metrics and write an improvement plan and save it as a markdown file
+[0m
+[0m$ [0mls -la MARIA_DESIGN_DIAGRAM.md 2>&1; git check-ignore MARIA_DESIGN_DIAGRAM.md 2>&1; cat .gitignore 2>/dev/null
+ls: cannot access 'MARIA_DESIGN_DIAGRAM.md': No such file or directory
+# borevibe — scratch and conversation files (never commit these)
+.borevibe/
+ai_reply.txt
+ai_reply_raw.txt
+full_prompt.txt
+history.txt
+opencode_prompt.txt
+opencode_stderr.log
+[0m
+[0m$ [0mls -la; echo "---"; git ls-files | grep -i -E "maria|diagram|mermaid" ; echo "---"; grep -ril "erDiagram\|mermaid\|MARIA_DESIGN" . 2>/dev/null | grep -v .git
+total 77984
+drwxr-xr-x 10 runner runner     4096 Aug  8 00:29 .
+drwxr-xr-x  3 runner runner     4096 Aug  8 00:29 ..
+drwxr-xr-x  2 runner runner     4096 Aug  8 00:29 .borevibe
+drwxr-xr-x  7 runner runner     4096 Aug  8 00:29 .git
+drwxr-xr-x  3 runner runner     4096 Aug  8 00:29 .github
+-rw-r--r--  1 runner runner      176 Aug  8 00:29 .gitignore
+-rw-r--r--  1 runner runner 34055376 Aug  8 00:29 1982_toyota_hiace_combi.glb
+-rw-r--r--  1 runner runner     3320 Aug  8 00:29 OOP_REFACTOR_GUIDE.md
+-rw-r--r--  1 runner runner     9449 Aug  8 00:29 PROJECT_REVIEW.md
+-rw-r--r--  1 runner runner    20127 Aug  8 00:29 README.md
+-rw-r--r--  1 runner runner     2048 Aug  8 00:29 ai_reply.txt
+-rw-r--r--  1 runner runner        0 Aug  8 00:29 ai_reply_raw.txt
+drwxr-xr-x  3 runner runner     4096 Aug  8 00:29 assets
+-rw-r--r--  1 runner runner 22739084 Aug  8 00:29 bmw_m4_competition_m_package.glb
+-rw-r--r--  1 runner runner 22917411 Aug  8 00:29 burnin-rubber-crash-n-burn-city.zip
+-rw-r--r--  1 runner runner     2285 Aug  8 00:29 dependency-reduced-pom.xml
+-rw-r--r--  1 runner runner     4402 Aug  8 00:29 full_prompt.txt
+-rw-r--r--  1 runner runner    14773 Aug  8 00:29 history.txt
+-rw-r--r--  1 runner runner      173 Aug  8 00:29 opencode.json
+-rw-r--r--  1 runner runner     1138 Aug  8 00:29 opencode_stderr.log
+-rw-r--r--  1 runner runner     5355 Aug  8 00:29 pom.xml
+-rw-r--r--  1 runner runner       21 Aug  8 00:29 scoreboard.txt
+drwxr-xr-x  2 runner runner     4096 Aug  8 00:29 source
+drwxr-xr-x  3 runner runner     4096 Aug  8 00:29 src
+drwxr-xr-x  5 runner runner     4096 Aug  8 00:29 target
+drwxr-xr-x  2 runner runner     4096 Aug  8 00:29 textures
+---
+---
+./ai_reply.txt
+./.borevibe/last_reply.json
+./.borevibe/history.json
+./opencode_stderr.log
+./full_prompt.txt
+[0m
+[0m← [0mWrite MARIA_DESIGN_DIAGRAM.md
+Wrote file successfully.
+[0m
+[0m← [0mEdit MARIA_DESIGN_DIAGRAM.md
+Index: /home/runner/work/gamegame/gamegame/MARIA_DESIGN_DIAGRAM.md
+===================================================================
+--- /home/runner/work/gamegame/gamegame/MARIA_DESIGN_DIAGRAM.md
++++ /home/runner/work/gamegame/gamegame/MARIA_DESIGN_DIAGRAM.md
+@@ -117,9 +117,9 @@
+   (`engine-window` picks waypoints from `ROAD_SAMPLE`, traffic follows `ROUTE_WAYPOINT`,
+   passengers drive between `CityMap` waypoints); `y` is derived from mesh/sampling.
+ - `CITY_MESH.category` + `solid`/`visible` flags replace the fragile mesh-name string
+   heuristics (`contains("street")`, `contains("building")`, `contains("collision")`).
+-- `HOT-SESSION`, `DELIVERY` and `PASSENGER` make the 100-point drop-off rule queryable.
++- `GAME_SESSION`, `DELIVERY` and `PASSENGER` make the 100-point drop-off rule queryable.
+ - `HIGH_SCORE` replaces `scoreboard.txt`; `GAME_SESSION` captures one play-through.
+ 
+ ## DDL (MariaDB 10.x)
+ 
+
+[0m
+[0m$ [0mgit add MARIA_DESIGN_DIAGRAM.md && git commit -m "Add MariaDB design diagram" && git push
+Author identity unknown
+
+*** Please tell me who you are.
+
+Run
+
+  git config --global user.email "you@example.com"
+  git config --global user.name "Your Name"
+
+to set your account's default identity.
+Omit --global to set the identity only in this repository.
+
+fatal: empty ident name (for <runner@runnervmvrwv9.cwerdptpvzpeflxqczcybh3zdd.yx.internal.cloudapp.net>) not allowed
+[0m
+[0m$ [0mgit log -1 --format='%an <%ae>'
+flixy lev spidlk <kaleabznation1@gmail.com>
+[0m
+[0m$ [0mgit config user.name "flixy lev spidlk" && git config user.email "kaleabznation1@gmail.com" && git commit -m "Add MariaDB design diagram" && git push
+[master 2c85816] Add MariaDB design diagram
+ 1 file changed, 251 insertions(+)
+ create mode 100644 MARIA_DESIGN_DIAGRAM.md
+To https://github.com/PSLSbb/gamegame
+   058a641..2c85816  master -> master
+[0m
