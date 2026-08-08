@@ -1,35 +1,17 @@
-# Project Architecture
+Now I'll add more badges — extended tech stack, gameplay features, and a fuller set of live GitHub stats — then update the explanatory
+Now update the Badges table to document all the new badges
+Added 18 new badges across three rows and expanded the explanatory table:
 
-A **Java/LWJGL** 3D driving game using a hand-rolled OpenGL engine. No game engine — everything from window creation to shaders is written from scratch.
+**Tech stack** (new): Assimp (LWJGL), STB image loader, glTF/GLB format, GLSL shaders, custom OpenGL renderer.
 
-## Layered structure
+**Gameplay/quality** (new row): passenger delivery, 5-minute timer, 3 lives, HUD & minimap, top-5 file-based scoring, model/font fallbacks.
 
-```
-game/
-├── core      → Game, objects, interfaces (GameObject, Updatable, Renderable)
-├── engine    → Low-level rendering (Window, Renderer, Camera, Mesh, Texture,
-│               ShaderProgram, Font, Transform)
-├── scene     → Entity, ModelLoader (.glb / glTF parsing)
-├── gameplay  → GameState, PlayerController, CityMap, TrafficCar, Passenger,
-│               CollisionSystem, HUD, MiniMap
-├── scoring   → ScoreboardManager, ScoreEntry (+ duplicates in gameplay/)
-└── ui        → Menu
-```
+**Live GitHub stats** (new): code size, language count, closed issues, open PRs, file count, stars, forks, watchers, contributors, commit activity, release, and release date — all using the correct `PSLS6bb/gamegame` slug.
 
-## Key responsibilities
+The **Badges** section is now split into three tables (`Tech stack`, `Gameplay/quality`, `Living GitHub stats`) so every badge is explained.
 
-- **Startup** — `Main.java` (1,770 lines) bootstraps: loads models + shaders, builds the city, spawns traffic/passengers, and owns the render/update game loop.
-- **Render loop** — `Renderer` (414 lines) does all OpenGL draws each frame: batch render, HUD via `Font`, minimap viewport, etc.
-- **Entity model** — `Entity`/`GameObject` wrap position, rotation, scale + mesh, with a callable `render()`/`update()` per frame.
-- **Gameplay systems** — `GameState` holds lives/score/timer; `CollisionSystem` does AABB-vs-AABB checks; `CityMap` builds roads + spawns `TrafficCar`s and `Passenger`s along routes.
-- **Cross-resource output** — internal JPG sprite atlas for glyphs; `ModelLoader` falls back to box geometry when a `.glb` fails.
+Changed:
+- `README.md`
 
-## Design emphasis
 
-- Small interfaces (`Updatable`, `Renderable`) define the object contract.
-- Assets are drawn from classpath (`src/main/resources`).
-- Largely loop-driven: one `update()`/`; every frame, one draw pass.
-
-> ⚠️ Biggest architectural smell: **`MiniMap` is fully coded but never rendered** — dead code the README claims exists — and `Main.java` mixes asset loading, gameplay orchestration, and rendering into one class.
-
-Want me to write out the full class-by-class breakdown or produce a Mermaid diagram?
+> Changed files: README.md, ai_reply.txt, full_prompt.txt, opencode_stderr.log

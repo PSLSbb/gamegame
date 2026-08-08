@@ -3,15 +3,40 @@
 [![Java](https://img.shields.io/badge/Java-26-orange?logo=openjdk&logoColor=white)](https://openjdk.org/projects/jdk/)
 [![LWJGL](https://img.shields.io/badge/LWJGL-3.3.6-blueviolet?logo=maven)](https://www.lwjgl.org/)
 [![OpenGL](https://img.shields.io/badge/OpenGL-3.3%20Core-5586A4?logo=opengl&logoColor=white)](https://www.opengl.org/)
-[![JOML](https://img.shields.io/badge/JOML-1.10-3766ab?logo=maven)](https://github.com/JOML-CI/JOML)
+[![JOML](https://img.shields.io/badge/JOML-1.10.8-3766ab?logo=maven)](https://github.com/JOML-CI/JOML)
 [![GLFW](https://img.shields.io/badge/GLFW-3.3-8C1D40)]()
 [![Build](https://img.shields.io/badge/build-Maven-2C2255?logo=apachemaven&logoColor=white)](https://maven.apache.org/)
 [![Platform](https://img.shields.io/badge/platform-Linux-3A9E2C?logo=linux)]()
+[![Assimp](https://img.shields.io/badge/Assimp-LWJGL-87A96B?logo=assimp)](https://assimp.org/)
+[![STB](https://img.shields.io/badge/STB-image%20loader-4C9CBE?logo=maven)](https://github.com/nothings/stb)
+[![glTF](https://img.shields.io/badge/format-glTF%2FGLB-8233C5)](https://www.khronos.org/gltf/)
+[![Shaders](https://img.shields.io/badge/shaders-GLSL-7C5CFF)](https://www.khronos.org/opengl/wiki/OpenGL_Shading_Language)
+[![3D](https://img.shields.io/badge/renderer-custom%20OpenGL-22C55E)](./src/main/java/game/engine/Renderer.java)
+
+[![Gameplay](https://img.shields.io/badge/gameplay-passenger%20delivery-22C55E)]()
+[![Timer](https://img.shields.io/badge/timer-5%20minutes-EF4444)]()
+[![Lives](https://img.shields.io/badge/lives-3-D97706)]()
+[![HUD](https://img.shields.io/badge/renders-HUD%20%26%20minimap-0EA5E9)]()
+[![Scoring](https://img.shields.io/badge/scoring-top%205%20file--based-0D9488)]()
+[![Robustness](https://img.shields.io/badge/robustness-model--and--font--fallbacks-64748B)]()
 
 [![GitHub repo size](https://img.shields.io/github/repo-size/PSLSbb/gamegame?logo=github)](https://github.com/PSLSbb/gamegame)
+[![GitHub code size](https://img.shields.io/github/languages/code-size/PSLSbb/gamegame?logo=github)](https://github.com/PSLSbb/gamegame)
 [![Last commit](https://img.shields.io/github/last-commit/PSLSbb/gamegame?logo=github)](https://github.com/PSLSbb/gamegame)
 [![Top language](https://img.shields.io/github/languages/top/PSLSbb/gamegame?logo=java&logoColor=white)](https://github.com/PSLSbb/gamegame/search?l=Java)
+[![Language count](https://img.shields.io/github/languages/count/PSLSbb/gamegame?logo=github)](https://github.com/PSLSbb/gamegame/languages)
 [![Open issues](https://img.shields.io/github/issues/PSLSbb/gamegame?logo=github)](https://github.com/PSLSbb/gamegame/issues)
+[![Closed issues](https://img.shields.io/github/issues-closed/PSLSbb/gamegame?logo=github)](https://github.com/PSLSbb/gamegame/issues?q=is%3Aissue+is%3Aclosed)
+[![Open PRs](https://img.shields.io/github/issues-pr/PSLSbb/gamegame?logo=github)](https://github.com/PSLSbb/gamegame/pulls)
+[![File count](https://img.shields.io/github/dir-file-count/PSLSbb/gamegame?logo=github)](https://github.com/PSLSbb/gamegame)
+
+[![Stars](https://img.shields.io/github/stars/PSLSbb/gamegame?logo=github)](https://github.com/PSLSbb/gamegame/stargazers)
+[![Forks](https://img.shields.io/github/forks/PSLSbb/gamegame?logo=github)](https://github.com/PSLSbb/gamegame/fork)
+[![Watchers](https://img.shields.io/github/watchers/PSLSbb/gamegame?logo=github)](https://github.com/PSLSbb/gamegame/watchers)
+[![Contributors](https://img.shields.io/github/contributors/PSLSbb/gamegame?logo=github)](https://github.com/PSLSbb/gamegame/graphs/contributors)
+[![Commit activity](https://img.shields.io/github/commit-activity/m/PSLSbb/gamegame?logo=github)](https://github.com/PSLSbb/gamegame)
+[![Release](https://img.shields.io/github/v/release/PSLSbb/gamegame?logo=github)](https://github.com/PSLSbb/gamegame/releases)
+[![Release date](https://img.shields.io/github/release-date/PSLSbb/gamegame?logo=github)](https://github.com/PSLSbb/gamegame/releases)
 
 City Racer is a Java/LWJGL passenger-delivery driving game. The player drives a van through a loaded 3D city map, picks up passengers at green markers, drops them off at yellow markers, avoids traffic cars, and tries to score as many deliveries as possible before time or lives run out.
 
@@ -57,16 +82,43 @@ The project is intentionally compact: it has a small custom rendering/gameplay s
 
 ## Badges
 
+**Tech stack**
+
 | Badge | Meaning |
 | --- | --- |
 | `Java 26` | Compiler target (`maven.compiler.source/target` in `pom.xml`) |
 | `LWJGL 3.3.6` | LWJGL version pinned in `pom.xml` |
 | `OpenGL 3.3 Core` | GLFW/OpenGL context requested by the engine |
-| `JOML 1.10.x` | JOML math library dependency |
-| `Assimp` | Model import via LWJGL-Assimp |
+| `JOML 1.10.8` | JOML math library dependency |
+| `GLFW 3.3` | Window/input library (part of LWJGL 3.3.6) |
+| `Assimp` | Model import via the LWJGL-Assimp binding |
+| `STB` | Image loading via the LWJGL-STB binding |
+| `glTF/GLB` | 3D asset format loaded by Assimp |
+| `GLSL` | Shader language for the vertex/fragment shaders |
+| `custom OpenGL` | The project's own renderer (`game.engine.Renderer`) |
 | `Maven` | Build tool |
-| `Linux` | Current LWJGL natives classifier |
-| `repo size`, `last commit`, `top language`, `open issues` | Live GitHub stats |
+| `Linux` | Current LWJGL natives classifier (`natives-linux` in `pom.xml`) |
+
+| Badge | Meaning |
+| --- | --- |
+| `passenger delivery` | Core gameplay loop |
+| `5 minutes` / `3 lives` | Game timer and lives in `GameState` |
+| `HUD & minimap` | In-game overlays rendered by `HUD` and `MiniMap` |
+| `top 5 file-based` | Score persistence via `scoreboard.txt` |
+| `model & font fallbacks` | Placeholder geometry/blocks when assets cannot load |
+
+**Living GitHub stats**
+
+| Badge | Meaning |
+| --- | --- |
+| `repo size`, `code size` | Total / source-only size of the repository |
+| `last commit`, `commit activity` | Freshness and cadence of pushes |
+| `top language`, `language count` | Primary and total languages on GitHub |
+| `open issues`, `closed issues` | Issue tracker state |
+| `open PRs` | Open pull requests |
+| `file count` | Files tracked in the repository |
+| `stars`, `forks`, `watchers`, `contributors` | Community engagement/contributor graph |
+| `release`, `release date` | Latest tagged release and its date |
 
 ## Requirements
 
