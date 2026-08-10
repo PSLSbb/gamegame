@@ -1,35 +1,4 @@
-# Project Architecture
+Hey! What would you like me to work on?
 
-A **Java/LWJGL** 3D driving game using a hand-rolled OpenGL engine. No game engine — everything from window creation to shaders is written from scratch.
 
-## Layered structure
-
-```
-game/
-├── core      → Game, objects, interfaces (GameObject, Updatable, Renderable)
-├── engine    → Low-level rendering (Window, Renderer, Camera, Mesh, Texture,
-│               ShaderProgram, Font, Transform)
-├── scene     → Entity, ModelLoader (.glb / glTF parsing)
-├── gameplay  → GameState, PlayerController, CityMap, TrafficCar, Passenger,
-│               CollisionSystem, HUD, MiniMap
-├── scoring   → ScoreboardManager, ScoreEntry (+ duplicates in gameplay/)
-└── ui        → Menu
-```
-
-## Key responsibilities
-
-- **Startup** — `Main.java` (1,770 lines) bootstraps: loads models + shaders, builds the city, spawns traffic/passengers, and owns the render/update game loop.
-- **Render loop** — `Renderer` (414 lines) does all OpenGL draws each frame: batch render, HUD via `Font`, minimap viewport, etc.
-- **Entity model** — `Entity`/`GameObject` wrap position, rotation, scale + mesh, with a callable `render()`/`update()` per frame.
-- **Gameplay systems** — `GameState` holds lives/score/timer; `CollisionSystem` does AABB-vs-AABB checks; `CityMap` builds roads + spawns `TrafficCar`s and `Passenger`s along routes.
-- **Cross-resource output** — internal JPG sprite atlas for glyphs; `ModelLoader` falls back to box geometry when a `.glb` fails.
-
-## Design emphasis
-
-- Small interfaces (`Updatable`, `Renderable`) define the object contract.
-- Assets are drawn from classpath (`src/main/resources`).
-- Largely loop-driven: one `update()`/`; every frame, one draw pass.
-
-> ⚠️ Biggest architectural smell: **`MiniMap` is fully coded but never rendered** — dead code the README claims exists — and `Main.java` mixes asset loading, gameplay orchestration, and rendering into one class.
-
-Want me to write out the full class-by-class breakdown or produce a Mermaid diagram?
+> Changed files: ai_reply.txt, full_prompt.txt
