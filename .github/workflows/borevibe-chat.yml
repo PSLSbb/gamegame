@@ -10,10 +10,6 @@ on:
         description: 'Conversation history (base64 JSON array)'
         required: false
         type: string
-      api_key:
-        description: 'OpenCode (Zen) API key (base64)'
-        required: true
-        type: string
 jobs:
   chat-turn:
     runs-on: ubuntu-latest
@@ -48,10 +44,9 @@ jobs:
           exit 0
       - name: Configure opencode auth
         env:
-          API_KEY_B64: ${{ github.event.inputs.api_key }}
+          API_KEY: ${{ secrets.BOREVIBE_API_KEY }}
         run: |
           mkdir -p "$HOME/.local/share/opencode"
-          API_KEY=$(printf '%s' "$API_KEY_B64" | base64 -d)
           jq -n --arg k "$API_KEY" '{opencode: {type: "api", key: $k}}' > "$HOME/.local/share/opencode/auth.json"
           chmod 600 "$HOME/.local/share/opencode/auth.json"
       - name: Isolate on PR branch
@@ -84,8 +79,11 @@ jobs:
       - name: Run opencode
         id: generate
         shell: bash
+        env:
+          GITHUB_TOKEN: ''
         run: |
           set +eo pipefail
+          export GITHUB_TOKEN=
           opencode run --auto --format default -m opencode/deepseek-v4-flash-free "$(cat full_prompt.txt)" > ai_reply_raw.txt 2> opencode_stderr.log || true
           node -e '
             const fs = require("fs");
