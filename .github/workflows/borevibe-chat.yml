@@ -120,13 +120,7 @@ jobs:
             }
             fs.appendFileSync("ai_reply.txt", "\n\n> " + note + "\n");
           '
-      - name: Upload reply artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: borevibe-reply
-          path: ai_reply.txt
-          if-no-files-found: warn
-      - name: Open PR with changes
+      - name: Push changes and open PR
         env:
           RUN_ID: ${{ github.run_id }}
           REPO: ${{ github.repository }}
@@ -135,21 +129,47 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set +e
+          set -o pipefail
           BRANCH="borevibe/process/${RUN_ID}"
           git config user.name "borevibe Bot"
           git config user.email "borevibe@bot.local"
           if git diff --quiet && git diff --cached --quiet; then
-            echo "No changes produced on the branch — nothing to review"
+            echo "No changes produced on the branch — nothing to review" >&2
+            printf '%s\n' "> PR skipped: no changes produced." >> ai_reply.txt
             exit 0
           fi
           git add -A
           git commit -m "borevibe: process ${RUN_ID}" --allow-empty-message 2>&1 | tail -2
           git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/${REPO}.git"
           git push -u origin "HEAD:refs/heads/${BRANCH}" 2>&1 | tail -3
+          PUSH_STATUS=${PIPESTATUS[0]}
+          if [ "$PUSH_STATUS" -ne 0 ]; then
+            printf '%s\n' "> PR creation failed: git push exited with status ${PUSH_STATUS}" >> ai_reply.txt
+            exit "$PUSH_STATUS"
+          fi
           BODY_FILE=opencode_prompt.txt
           PROMPT_PLAIN=$(printf '%s' "$PROMPT_B64" | base64 -d 2>/dev/null)
           printf '%s\n' "$PROMPT_PLAIN" > "$BODY_FILE"
-          gh pr create --base "${DEFAULT_BRANCH}" --head "$BRANCH" --title "borevibe: process ${RUN_ID}" --body-file "$BODY_FILE" 2>&1 | tail -5
+          PR_OUT=$(gh pr create --base "${DEFAULT_BRANCH}" --head "$BRANCH" --title "borevibe: process ${RUN_ID}" --body-file "$BODY_FILE" 2>&1 | tail -5)
+          GH_STATUS=${PIPESTATUS[0]}
+          if [ "$GH_STATUS" -eq 0 ]; then
+            if [ -n "$PR_OUT" ]; then
+              printf '%s\n' "> PR created: ${PR_OUT}" >> ai_reply.txt
+            else
+              printf '%s\n' "> PR created: (no URL returned)" >> ai_reply.txt
+            fi
+          else
+            printf '%s\n' "> PR creation failed: gh pr create exited with status ${GH_STATUS}" >> ai_reply.txt
+            echo "gh pr create failed (exit ${GH_STATUS})" >&2
+          fi
+          exit 0
+      - name: Upload reply artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: borevibe-reply
+          path: ai_reply.txt
+          if-no-files-found: warn
       - name: Upload logs on failure
         if: failure()
         uses: actions/upload-artifact@v4
