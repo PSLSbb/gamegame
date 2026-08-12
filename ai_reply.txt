@@ -1,35 +1,13 @@
-# Project Architecture
+Rewrote `README.md` (~495 → ~130 lines) with a cleaner, grouped badge layout and tighter content.
 
-A **Java/LWJGL** 3D driving game using a hand-rolled OpenGL engine. No game engine — everything from window creation to shaders is written from scratch.
+**Badges** — now 24, split into three rows:
+- **Stack**: Java 26, LWJGL 3.3.6, OpenGL 3.3 Core, JOML 1.10.8, Assimp, GLSL
+- **Project**: Maven build, Linux platform, license, PRs-welcome
+- **Live GitHub stats**: stars, forks, watchers, contributors, release, last commit, open/closed issues & PRs, repo size, top language, language count, code size
 
-## Layered structure
+**Content** — condensed into short sections: intro, ✨ Features, 🚀 Quick Start, 🕹️ How to Play, 🗂 Project Structure, 🏗 Architecture (3 mermaid diagrams), ⚙️ Tuning Guide, 🧩 Troubleshooting, 📄 Related Docs. Dropped the long "Contents" TOC, asset pipeline deep-dives, badge-explanation tables, and verbose development notes.
 
-```
-game/
-├── core      → Game, objects, interfaces (GameObject, Updatable, Renderable)
-├── engine    → Low-level rendering (Window, Renderer, Camera, Mesh, Texture,
-│               ShaderProgram, Font, Transform)
-├── scene     → Entity, ModelLoader (.glb / glTF parsing)
-├── gameplay  → GameState, PlayerController, CityMap, TrafficCar, Passenger,
-│               CollisionSystem, HUD, MiniMap
-├── scoring   → ScoreboardManager, ScoreEntry (+ duplicates in gameplay/)
-└── ui        → Menu
-```
+Changed: `README.md`
 
-## Key responsibilities
 
-- **Startup** — `Main.java` (1,770 lines) bootstraps: loads models + shaders, builds the city, spawns traffic/passengers, and owns the render/update game loop.
-- **Render loop** — `Renderer` (414 lines) does all OpenGL draws each frame: batch render, HUD via `Font`, minimap viewport, etc.
-- **Entity model** — `Entity`/`GameObject` wrap position, rotation, scale + mesh, with a callable `render()`/`update()` per frame.
-- **Gameplay systems** — `GameState` holds lives/score/timer; `CollisionSystem` does AABB-vs-AABB checks; `CityMap` builds roads + spawns `TrafficCar`s and `Passenger`s along routes.
-- **Cross-resource output** — internal JPG sprite atlas for glyphs; `ModelLoader` falls back to box geometry when a `.glb` fails.
-
-## Design emphasis
-
-- Small interfaces (`Updatable`, `Renderable`) define the object contract.
-- Assets are drawn from classpath (`src/main/resources`).
-- Largely loop-driven: one `update()`/`; every frame, one draw pass.
-
-> ⚠️ Biggest architectural smell: **`MiniMap` is fully coded but never rendered** — dead code the README claims exists — and `Main.java` mixes asset loading, gameplay orchestration, and rendering into one class.
-
-Want me to write out the full class-by-class breakdown or produce a Mermaid diagram?
+> Changed files: README.md, ai_reply.txt, full_prompt.txt, opencode_stderr.log
