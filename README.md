@@ -63,7 +63,7 @@ The project is intentionally compact: it has a small custom rendering/gameplay s
 | `LWJGL 3.3.6` | LWJGL version pinned in `pom.xml` |
 | `OpenGL 3.3 Core` | GLFW/OpenGL context requested by the engine |
 | `JOML 1.10.x` | JOML math library dependency |
-| `Assimp` | Model import via LWJGL-Assimp |
+| `GLFW 3.3` | GLFW window/input dependency (pulled in via LWJGL) |
 | `Maven` | Build tool |
 | `Linux` | Current LWJGL natives classifier |
 | `repo size`, `last commit`, `top language`, `open issues` | Live GitHub stats |
@@ -72,7 +72,7 @@ The project is intentionally compact: it has a small custom rendering/gameplay s
 
 The Maven project is configured for:
 
-- JDK 21 or newer, based on `maven.compiler.source` and `maven.compiler.target` in `pom.xml`.
+- JDK 26 or newer, based on `maven.compiler.source` and `maven.compiler.target` in `pom.xml`.
 - Maven 3.8+.
 - Linux native LWJGL libraries, because `pom.xml` sets:
 
@@ -124,14 +124,18 @@ For Windows or macOS, update the `lwjgl.natives` property in `pom.xml` to the ma
 |   |   |-- MiniMap.java
 |   |   |-- Passenger.java
 |   |   |-- PlayerController.java
+|   |   |-- ScoreEntry.java            # Deprecated alias for game.scoring.ScoreEntry
+|   |   |-- ScoreboardManager.java     # Deprecated alias for game.scoring.ScoreboardManager
 |   |   `-- TrafficCar.java
 |   |-- scene
 |   |   |-- Entity.java
 |   |   `-- ModelLoader.java
-|   `-- scoring
-|       |-- ScoreEntry.java
-|       |-- Scoreboard.java
-|       `-- ScoreboardManager.java
+|   |-- scoring
+|   |   |-- ScoreEntry.java
+|   |   |-- Scoreboard.java
+|   |   `-- ScoreboardManager.java
+|   `-- ui
+|       `-- Menu.java
 |-- src/main/resources/shaders
 |   |-- fragment.glsl
 |   |-- menu_fragment.glsl
@@ -175,11 +179,11 @@ graph TD
         Transform
         Window
     end
-    U --> gameplay
+    Menu --> gameplay
     gameplay --> scene
     scene --> engine
 
-    click U "src/main/java/game/ui/Menu.java"
+    click Menu "src/main/java/game/ui/Menu.java"
     click HUD "src/main/java/game/gameplay/HUD.java"
     click Renderer "src/main/java/game/engine/Renderer.java"
 ```
@@ -196,8 +200,8 @@ sequenceDiagram
     participant HUD as Renderer/HUD
 
     Main->>Window: create 1280x720 GLFW window
-    Main->>Model: load city & vehicle & passenger GLBs
-    Model-->>Main: mesh lists
+    Main->>ModelLoader: load city & vehicle & passenger GLBs
+    ModelLoader-->>Main: mesh lists
     Main->>Main: normalize scale/origin
     Main->>CityMap: extract road samples, calc bounds
     CityMap-->>Main: routes, passenger locations
@@ -212,32 +216,37 @@ sequenceDiagram
 
 ## Game State Machine
 
-The top-level screen flow is driven by `GameState.GameScreen`:
+The top-level screen flow is driven by `GameState.GameScreen` (`MENU`, `PLAYING`, `GAME_OVER`). The instructions screen is a sub-view of `MENU` toggled by `showInstructions`:
 
 ```mermaid
 stateDiagram-v2
     [*] --> MENU
     MENU --> PLAYING : Enter / start
-    MENU --> MENU : Quit / Esc
+    MENU --> INSTRUCTIONS : How to Play
+    INSTRUCTIONS --> MENU : Esc
     PLAYING --> GAME_OVER : timer = 0 or lives = 0
     PLAYING --> MENU : Esc
+    GAME_OVER --> MENU : Esc
 ```
 
 Scores earned in `PLAYING` are persisted through the `scoring` package (`ScoreboardManager`).
 
 ## Passenger State Machine
 
-Each passenger follows a pickup/drop-off lifecycle:
+Each passenger follows a full pickup/drop-off lifecycle:
 
 ```mermaid
 stateDiagram-v2
-    [*] --> AVAILABLE
-    AVAILABLE --> CARRIED : in pickupRadius
-    CARRIED --> DELIVERED : in dropoffRadius
-    DELIVERED --> [*]
+    [*] --> SPAWNED
+    SPAWNED --> WAITING
+    WAITING --> HAILING : taxi within hailDistance
+    HAILING --> BOARDED : taxi close & stopped
+    HAILING --> WAITING : taxi drives away
+    BOARDED --> EXITED : at destination
+    EXITED --> [*]
 ```
 
-- Pickup and drop-off radii are `3.0f` world units in `Passenger.java`.
+- Key distances in `Passenger.java`: `hailDistance` `8.0f`, `boardingDistance` `2.0f`, `destinationArrivalDistance` `6.0f`. Legacy 2D radii map to these: `pickupRadius` `5.0f`, `dropoffRadius` `6.0f`.
 
 ## Bundled Assets
 
@@ -246,8 +255,8 @@ The project ships the following GLB models:
 | Asset | Path | Size | Role | Attribution |
 | --- | --- | --- | --- | --- |
 | City map | `source/burnin_rubber_crash_n_burn_city.glb` | ~18 MB | City/map world geometry | Burnin' Rubber providers |
-| Player vehicle | `1982_toyota_hiace_combi.glb` | ~34 MB | Player car | Original asset author |
-| Traffic vehicle | `bmw_m4_competition_m_package.glb` | ~23 MB | Traffic car mesh clones | Original asset author |
+| Player vehicle | `1982_toyota_hiace_combi.glb` | ~32 MB | Player car | Original asset author |
+| Traffic vehicle | `bmw_m4_competition_m_package.glb` | ~22 MB | Traffic car mesh clones | Original asset author |
 | Passenger | `assets/passengers/passenger.glb` | ~0.5 MB | Pickup/drop-off character | Cesium (CC-BY 4.0) |
 
 Embedded textures extracted from models at build time land in `textures/` (`gltf_embedded_0.png ... gltf_embedded_8.png`).
@@ -299,7 +308,7 @@ HUD:
 - Top left: score. Top center: remaining time. Top right: speed in km/h.
 - Bottom left: lives. Left side: delivery count.
 - Center notification: nearest passenger or current drop-off objective.
-- Minimap: road samples, traffic, player direction, passengers, traffic, spawn point.
+- Minimap: road samples, traffic, player direction, passengers, and spawn point.
 - Main menu exposes a scoreboard of the top five scores (via `ScoreboardManager`).
 
 ## Build and Run Commands
@@ -319,7 +328,7 @@ mvn package
 Run the packaged game:
 
 ```bash
-java -jar target/city-racer-1.0.jar
+java -jar target/city-racer-new-variation-ref-1.0.jar
 ```
 
 Run from compiled classes with Maven-managed dependencies:
@@ -355,10 +364,16 @@ if (deltaTime > 0.05f) deltaTime = 0.05f;
 
 ### Traffic
 
-Traffic cars are clones of the traffic model (`bmw_m4_competition_m_package.glb`) assigned generated routes. Speed is randomized (`4.0f + Math.random() * 4.0f`) and count is capped at eight:
+Traffic is split into two groups in `Main.createTraffic()`:
+
+- **Interactive traffic**: up to `INTERACTIVE_TRAFFIC_COUNT` (10) cars that follow generated routes, each driven toward the next waypoint. Speed per car is `4.5f + (i % 5) * 0.8f`.
+- **Ambient traffic**: `AMBIENT_TRAFFIC_COUNT` (38) simplified cars that also follow routes, with speed `3.0f + (i % 9) * 0.35f`.
+
+Counts are bounded by available routes:
 
 ```java
-int trafficCount = Math.min(8, carMeshes.size() * 8);
+int interactiveCount = Math.min(INTERACTIVE_TRAFFIC_COUNT, Math.max(4, routes.size()));
+int totalTraffic = interactiveCount + AMBIENT_TRAFFIC_COUNT;
 ```
 
 ### Collisions
@@ -395,7 +410,7 @@ The project uses five packaged GLB assets. `pom.xml` includes `*.glb` and `*.glt
 | Change score per delivery | `src/main/java/game/gameplay/GameState.java` | `deliverPassenger()` |
 | Change car physics | `src/main/java/game/gameplay/PlayerController.java` | `acceleration`, `maxSpeed`, `braking`, `turnSpeed`, `friction` |
 | Change pickup/drop-off radius | `src/main/java/game/gameplay/Passenger.java` | `pickupRadius`, `dropoffRadius` |
-| Change traffic count/speed | `src/main/java/game/Main.java` | `trafficCount`, speed in `createTraffic()` |
+| Change traffic count/speed | `src/main/java/game/Main.java` | `INTERACTIVE_TRAFFIC_COUNT`, `AMBIENT_TRAFFIC_COUNT`, speeds in `createTraffic()` |
 | Change collision size | `src/main/java/game/gameplay/CollisionSystem.java` | `carCollisionRadius`, `buildingCollisionRadius` |
 | Change crash cooldown | `src/main/java/game/Main.java` | `CRASH_COOLDOWN_SECONDS` |
 | Change camera sampling | `src/main/java/game/engine/Camera.java` | `distance`, `height`, `lookHeight` |
@@ -440,7 +455,7 @@ Routes are lists of `Vector2f` waypoints produced by `CityMap.generateRoutes()` 
 
 ### `Unsupported class file major version` or compile failure
 
-Install JDK 21+ or lower `maven.compiler.source/target` in `pom.xml`.
+Install JDK 26 or lower the `maven.compiler.source`/`maven.compiler.target` in `pom.xml`.
 
 ### LWJGL native library errors
 
