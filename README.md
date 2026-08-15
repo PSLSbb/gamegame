@@ -3,7 +3,7 @@
 [![Java](https://img.shields.io/badge/Java-26-orange?logo=openjdk&logoColor=white)](https://openjdk.org/projects/jdk/)
 [![LWJGL](https://img.shields.io/badge/LWJGL-3.3.6-blueviolet?logo=maven)](https://www.lwjgl.org/)
 [![OpenGL](https://img.shields.io/badge/OpenGL-3.3%20Core-5586A4?logo=opengl&logoColor=white)](https://www.opengl.org/)
-[![JOML](https://img.shields.io/badge/JOML-1.10-3766ab?logo=maven)](https://github.com/JOML-CI/JOML)
+[![JOML](https://img.shields.io/badge/JOML-1.10.8-3766ab?logo=maven)](https://github.com/JOML-CI/JOML)
 [![GLFW](https://img.shields.io/badge/GLFW-3.3-8C1D40)]()
 [![Build](https://img.shields.io/badge/build-Maven-2C2255?logo=apachemaven&logoColor=white)](https://maven.apache.org/)
 [![Platform](https://img.shields.io/badge/platform-Linux-3A9E2C?logo=linux)]()
@@ -62,7 +62,7 @@ The project is intentionally compact: it has a small custom rendering/gameplay s
 | `Java 26` | Compiler target (`maven.compiler.source/target` in `pom.xml`) |
 | `LWJGL 3.3.6` | LWJGL version pinned in `pom.xml` |
 | `OpenGL 3.3 Core` | GLFW/OpenGL context requested by the engine |
-| `JOML 1.10.x` | JOML math library dependency |
+| `JOML 1.10.x` | JOML math library dependency (pinned to 1.10.8) |
 | `Assimp` | Model import via LWJGL-Assimp |
 | `Maven` | Build tool |
 | `Linux` | Current LWJGL natives classifier |
@@ -72,7 +72,7 @@ The project is intentionally compact: it has a small custom rendering/gameplay s
 
 The Maven project is configured for:
 
-- JDK 21 or newer, based on `maven.compiler.source` and `maven.compiler.target` in `pom.xml`.
+- JDK 26, based on `maven.compiler.source` and `maven.compiler.target` in `pom.xml`.
 - Maven 3.8+.
 - Linux native LWJGL libraries, because `pom.xml` sets:
 
@@ -124,14 +124,18 @@ For Windows or macOS, update the `lwjgl.natives` property in `pom.xml` to the ma
 |   |   |-- MiniMap.java
 |   |   |-- Passenger.java
 |   |   |-- PlayerController.java
+|   |   |-- ScoreEntry.java           # Deprecated alias -> game.scoring
+|   |   |-- ScoreboardManager.java    # Deprecated alias -> game.scoring
 |   |   `-- TrafficCar.java
 |   |-- scene
 |   |   |-- Entity.java
 |   |   `-- ModelLoader.java
-|   `-- scoring
-|       |-- ScoreEntry.java
-|       |-- Scoreboard.java
-|       `-- ScoreboardManager.java
+|   |-- scoring
+|   |   |-- ScoreEntry.java
+|   |   |-- Scoreboard.java
+|   |   `-- ScoreboardManager.java
+|   `-- ui
+|       `-- Menu.java
 |-- src/main/resources/shaders
 |   |-- fragment.glsl
 |   |-- menu_fragment.glsl
@@ -175,11 +179,11 @@ graph TD
         Transform
         Window
     end
-    U --> gameplay
+    Menu --> gameplay
     gameplay --> scene
     scene --> engine
 
-    click U "src/main/java/game/ui/Menu.java"
+    click Menu "src/main/java/game/ui/Menu.java"
     click HUD "src/main/java/game/gameplay/HUD.java"
     click Renderer "src/main/java/game/engine/Renderer.java"
 ```
@@ -196,8 +200,8 @@ sequenceDiagram
     participant HUD as Renderer/HUD
 
     Main->>Window: create 1280x720 GLFW window
-    Main->>Model: load city & vehicle & passenger GLBs
-    Model-->>Main: mesh lists
+    Main->>ModelLoader: load city & vehicle & passenger GLBs
+    ModelLoader-->>Main: mesh lists
     Main->>Main: normalize scale/origin
     Main->>CityMap: extract road samples, calc bounds
     CityMap-->>Main: routes, passenger locations
@@ -217,13 +221,15 @@ The top-level screen flow is driven by `GameState.GameScreen`:
 ```mermaid
 stateDiagram-v2
     [*] --> MENU
-    MENU --> PLAYING : Enter / start
-    MENU --> MENU : Quit / Esc
+    MENU --> MENU : Esc (close instructions)
+    MENU --> PLAYING : Enter on "START GAME"
+    MENU --> MENU : Enter on "HOW TO PLAY"
     PLAYING --> GAME_OVER : timer = 0 or lives = 0
     PLAYING --> MENU : Esc
+    GAME_OVER --> MENU : Enter / Esc (save score)
 ```
 
-Scores earned in `PLAYING` are persisted through the `scoring` package (`ScoreboardManager`).
+Scores earned in `PLAYING` are persisted on game over through the `scoring` package (`ScoreboardManager`), which writes the top five scores to `scoreboard.txt`.
 
 ## Passenger State Machine
 
@@ -237,7 +243,7 @@ stateDiagram-v2
     DELIVERED --> [*]
 ```
 
-- Pickup and drop-off radii are `3.0f` world units in `Passenger.java`.
+- Pickup and drop-off radii are `5.0f` and `6.0f` world units respectively in `Passenger.java` (alongside hail/boarding distances `8.0f`/`2.0f`).
 
 ## Bundled Assets
 
@@ -299,8 +305,8 @@ HUD:
 - Top left: score. Top center: remaining time. Top right: speed in km/h.
 - Bottom left: lives. Left side: delivery count.
 - Center notification: nearest passenger or current drop-off objective.
-- Minimap: road samples, traffic, player direction, passengers, traffic, spawn point.
-- Main menu exposes a scoreboard of the top five scores (via `ScoreboardManager`).
+- Minimap: road samples, traffic routes, player direction, passengers, traffic, spawn point.
+- The game-over screen shows the top five scores and prompts for a name (via `ScoreboardManager`).
 
 ## Build and Run Commands
 
@@ -319,7 +325,7 @@ mvn package
 Run the packaged game:
 
 ```bash
-java -jar target/city-racer-1.0.jar
+java -jar target/city-racer-new-variation-ref-1.0.jar
 ```
 
 Run from compiled classes with Maven-managed dependencies:
@@ -347,7 +353,7 @@ if (deltaTime > 0.05f) deltaTime = 0.05f;
 
 ### Screen State
 
-`GameState.GameScreen` has three states: `MENU`, `PLAYING`, `GAME_OVER`. The menu handles start, instructions, scoreboard, and quit.
+`GameState.GameScreen` has three states: `MENU`, `PLAYING`, `GAME_OVER`. The menu handles start, instructions, and quit; the game-over screen shows the scoreboard.
 
 ### Player Movement
 
@@ -355,11 +361,12 @@ if (deltaTime > 0.05f) deltaTime = 0.05f;
 
 ### Traffic
 
-Traffic cars are clones of the traffic model (`bmw_m4_competition_m_package.glb`) assigned generated routes. Speed is randomized (`4.0f + Math.random() * 4.0f`) and count is capped at eight:
+Traffic is created in `Main.createTraffic()` as two groups on road-following routes:
 
-```java
-int trafficCount = Math.min(8, carMeshes.size() * 8);
-```
+- **Interactive cars** (up to `INTERACTIVE_TRAFFIC_COUNT = 10`) use clones of the traffic model (`bmw_m4_competition_m_package.glb`), are collidable, and drive at `4.5f + (i % 5) * 0.8f`.
+- **Ambient cars** (`AMBIENT_TRAFFIC_COUNT = 38`) use a simple generated box mesh, are non-collidable background traffic, and drive at `3.0f + (i % 9) * 0.35f`.
+
+The interactive count is limited by the number of routes: `Math.min(INTERACTIVE_TRAFFIC_COUNT, Math.max(4, routes.size()))`.
 
 ### Collisions
 
@@ -395,7 +402,7 @@ The project uses five packaged GLB assets. `pom.xml` includes `*.glb` and `*.glt
 | Change score per delivery | `src/main/java/game/gameplay/GameState.java` | `deliverPassenger()` |
 | Change car physics | `src/main/java/game/gameplay/PlayerController.java` | `acceleration`, `maxSpeed`, `braking`, `turnSpeed`, `friction` |
 | Change pickup/drop-off radius | `src/main/java/game/gameplay/Passenger.java` | `pickupRadius`, `dropoffRadius` |
-| Change traffic count/speed | `src/main/java/game/Main.java` | `trafficCount`, speed in `createTraffic()` |
+| Change traffic count/speed | `src/main/java/game/Main.java` | `INTERACTIVE_TRAFFIC_COUNT`, `AMBIENT_TRAFFIC_COUNT`, speeds in `createTraffic()` |
 | Change collision size | `src/main/java/game/gameplay/CollisionSystem.java` | `carCollisionRadius`, `buildingCollisionRadius` |
 | Change crash cooldown | `src/main/java/game/Main.java` | `CRASH_COOLDOWN_SECONDS` |
 | Change camera sampling | `src/main/java/game/engine/Camera.java` | `distance`, `height`, `lookHeight` |
@@ -440,7 +447,7 @@ Routes are lists of `Vector2f` waypoints produced by `CityMap.generateRoutes()` 
 
 ### `Unsupported class file major version` or compile failure
 
-Install JDK 21+ or lower `maven.compiler.source/target` in `pom.xml`.
+Install JDK 26 or lower `maven.compiler.source/target` in `pom.xml`.
 
 ### LWJGL native library errors
 
@@ -478,7 +485,7 @@ The system font loader could not find a font. Install a common font from `Render
 - This is a small custom engine, not a full framework.
 - Build outputs go to `target/`; `dependency-reduced-pom.xml` is generated by the Shade plugin.
 - Score persistence currently writes to `scoreboard.txt`.
-- Scores also exist in `scoring/` (`Scoreboard.java` central manager).
+- Scoring lives in `scoring/` (`ScoreboardManager` owns file parsing/saving; `Scoreboard` is a thin alias; `game.gameplay.ScoreEntry`/`ScoreboardManager` remain as deprecated compatibility shims).
 
 ## Suggested Next Improvements
 
@@ -493,3 +500,5 @@ The system font loader could not find a font. Install a common font from `Render
 ## Related Documents
 
 - `MARIA_DESIGN_DIAGRAM.md` — proposed relational (MariaDB) schema mapping the game's runtime design.
+- `PROJECT_REVIEW.md` — codebase review notes and observations.
+- `OOP_REFACTOR_GUIDE.md` — guidance for refactoring toward stronger OOP design.
