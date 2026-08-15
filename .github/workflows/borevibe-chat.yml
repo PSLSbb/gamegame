@@ -105,7 +105,7 @@ jobs:
           fi
       - name: Verify real changes
         run: |
-          CHANGED=$(git status --porcelain | wc -l)
+          CHANGED=$(git status --porcelain | grep -vE ' (ai_reply|full_prompt|opencode_stderr)\.(txt|log)$' | wc -l)
           echo "changed_files=$CHANGED"
           node -e '
             const fs = require("fs");
@@ -113,7 +113,7 @@ jobs:
             let note;
             try {
               const files = execSync("git status --porcelain", { encoding: "utf8" })
-                .split("\n").filter(Boolean).map((l) => l.slice(3).trim()).filter(Boolean).slice(0, 20);
+                .split("\n").filter(Boolean).map((l) => l.slice(3).trim()).filter((p) => p && !/^(ai_reply|full_prompt|opencode_stderr)\.(txt|log)$/.test(p)).slice(0, 20);
               note = files.length ? "Changed files: " + files.join(", ") : "No file changes were found on the review branch.";
             } catch {
               note = "Could not read the working tree.";
@@ -133,15 +133,22 @@ jobs:
           BRANCH="borevibe/process/${RUN_ID}"
           git config user.name "borevibe Bot"
           git config user.email "borevibe@bot.local"
-          if git diff --quiet && git diff --cached --quiet; then
-            echo "No changes produced on the branch — nothing to review" >&2
+          if [ -z "$(git status --porcelain | grep -vE ' (ai_reply|full_prompt|opencode_stderr)\.(txt|log)$')" ]; then
             printf '%s\n' "> PR skipped: no changes produced." >> ai_reply.txt
             exit 0
           fi
           git add -A
-          git commit -m "borevibe: process ${RUN_ID}" --allow-empty-message 2>&1 | tail -2
+          git reset -q -- ai_reply.txt full_prompt.txt opencode_stderr.log 2>/dev/null || true
+          COMMIT_OUT=$(git commit -m "borevibe: process ${RUN_ID}" --allow-empty-message 2>&1)
+          COMMIT_STATUS=$?
+          if [ "$COMMIT_STATUS" -ne 0 ]; then
+            printf '%s\n' "> PR creation failed: git commit exited with status ${COMMIT_STATUS}" >> ai_reply.txt
+            printf '%s\n' "$COMMIT_OUT" | tail -5 >> ai_reply.txt
+            exit "$COMMIT_STATUS"
+          fi
           git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/${REPO}.git"
-          git push -u origin "HEAD:refs/heads/${BRANCH}" 2>&1 | tail -3
+          git fetch origin "refs/heads/${BRANCH}" 2>/dev/null || true
+          git push -u --force-with-lease origin "HEAD:refs/heads/${BRANCH}" 2>&1 | tail -3
           PUSH_STATUS=${PIPESTATUS[0]}
           if [ "$PUSH_STATUS" -ne 0 ]; then
             printf '%s\n' "> PR creation failed: git push exited with status ${PUSH_STATUS}" >> ai_reply.txt
@@ -151,7 +158,7 @@ jobs:
           PROMPT_PLAIN=$(printf '%s' "$PROMPT_B64" | base64 -d 2>/dev/null)
           printf '%s\n' "$PROMPT_PLAIN" > "$BODY_FILE"
           PR_OUT=$(gh pr create --base "${DEFAULT_BRANCH}" --head "$BRANCH" --title "borevibe: process ${RUN_ID}" --body-file "$BODY_FILE" 2>&1 | tail -5)
-          GH_STATUS=${PIPESTATUS[0]}
+          GH_STATUS=$?
           if [ "$GH_STATUS" -eq 0 ]; then
             if [ -n "$PR_OUT" ]; then
               printf '%s\n' "> PR created: ${PR_OUT}" >> ai_reply.txt
@@ -159,8 +166,20 @@ jobs:
               printf '%s\n' "> PR created: (no URL returned)" >> ai_reply.txt
             fi
           else
+            EXISTING_URL=$(gh pr list --head "$BRANCH" --state all --json url -q '.[0].url // empty' 2>/dev/null | tail -1)
+            if [ -n "$EXISTING_URL" ]; then
+              printf '%s\n' "> PR already exists: ${EXISTING_URL}" >> ai_reply.txt
+              exit 0
+            fi
             printf '%s\n' "> PR creation failed: gh pr create exited with status ${GH_STATUS}" >> ai_reply.txt
+            PR_ERR=$(printf '%s\n' "$PR_OUT" | tr -d '\140' | grep -v '^[[:space:]]*$' | sed 's/^/> /' | head -5)
+            if [ -z "$PR_ERR" ]; then
+              printf '%s\n' "> (no error output)" >> ai_reply.txt
+            else
+              printf '%s\n' "$PR_ERR" >> ai_reply.txt
+            fi
             echo "gh pr create failed (exit ${GH_STATUS})" >&2
+            exit "$GH_STATUS"
           fi
           exit 0
       - name: Upload reply artifact
